@@ -1,58 +1,67 @@
-import numpy as np
-from data_structures.graph import Graph, FullyConnectedGraph
+import gc
+import time
+import os
+import json
 
-# Example usage:
+from scheduling_algorithms.brute_force import BruteForce
+from utils.time import get_human_readable_timestamp
+
+MAX_TESTS = 100
+# MAX_TESTS = float('inf')
+WORKER_LIMIT = 50
+
 if __name__ == "__main__":
-    worker_amount = 5
-    task_amount = 3
+    human_readable_time = get_human_readable_timestamp()
+    file_name =  f"test_{human_readable_time}"
 
-    worker_graph = FullyConnectedGraph(worker_amount)
-    task_graph = FullyConnectedGraph(task_amount)
+    with open((os.path.join("test_results", f"{file_name}.json")), "a") as results_file:
+        results_file.write("[\n")
+        
+        i = 1
+        w = 3  # Start from 3
+        can_execute = True
+        while can_execute:  # Infinite loop
+            for t in range(2, w + 1):
+                start_time = time.time()  # Record the start time
 
-    worker_subgraph_dict = {}
+                bf = BruteForce(w, t)
+                sims, min_val, min_keys = bf.run()
+                print(f"Test {i}: Workers - {w} | Tasks - {t} | Simulations - {sims} | Lowest Net Cost - {min_val}")
 
-    combination_size = task_amount  # Change this to the desired combination size
-    permutations = worker_graph.get_permutations(combination_size)
-    for permutation in permutations:
-        print("Worker Permutation: ", permutation)
+                end_time = time.time()  # Record the end time
+                elapsed_time = end_time - start_time  # Calculate the elapsed time
+                print(f"Time taken: {elapsed_time} seconds\n")
 
-        worker_subgraph = Graph()
-        for node1 in permutation:
-            for node2 in permutation:
-                weight = 0
-                if(node1 != node2):
-                    weight = worker_graph.graph[node1][node2]['weight']
-                    worker_subgraph.add_edge(node1, node2, weight)
-        print("Worker\'s Subgraph Adjacency Matrix: ")
-        print(worker_subgraph.get_adjacency_matrix(list(permutation)))
-        print("")
+                # Output to a JSON file
+                # Create a dictionary with the test results
+                test_result = {
+                    "Test": i,
+                    "Workers": w,
+                    "Tasks": t,
+                    "Simulations": sims,
+                    "Lowest_Net_Cost": min_val,
+                    "Time_taken": elapsed_time
+                }
 
-        worker_subgraph_dict[permutation] = worker_subgraph.get_adjacency_matrix(list(permutation))
+                # Convert the dictionary to a JSON string
+                json_string = json.dumps(test_result)
 
-    print("Total permutations: ", len(permutations))
-    # print(worker_subgraph_dict)
+                # Write the JSON string to the file
+                results_file.write(json_string + ",\n")
+                results_file.flush()
+                
+                i += 1
+                if i > MAX_TESTS:  # Condition to exit the loop
+                    can_execute = False
+                    break
+            
+            if w >= WORKER_LIMIT:  # Condition to exit the loop
+                    can_execute = False
+                    break
 
-    # Get TaskGraph as an adjacency matric
-    task_graph_adj_mat = task_graph.get_adjacency_matrix(list(task_graph.graph.nodes()))
-    # print("Adjacency Matrix:")
-    # print(task_graph_adj_mat)
+            # Clean up memory
+            gc.collect()
 
-    # Matrix multiplication
-    worker_subgraph_netcost_dict = {}
-
-    for perm, adj_mat in worker_subgraph_dict.items():
-        res = np.dot(adj_mat, task_graph_adj_mat)
-        netcost = np.sum(res)
-        worker_subgraph_netcost_dict[perm] = netcost
-
-    # print("Net Costs: ")
-    # print(worker_subgraph_netcost_dict)
-
-    # Find the minimum value
-    min_value = min(worker_subgraph_netcost_dict.values())
-    print("Lowest Net Cost: ", min_value)
-
-    # Find all keys associated with the minimum value
-    min_keys = [key for key, value in worker_subgraph_netcost_dict.items() if value == min_value]
-    print("Lowest Net Cost associated Worker subgraph permutation: ")
-    print(min_keys)
+            w += 1
+    
+        results_file.write("]\n")
