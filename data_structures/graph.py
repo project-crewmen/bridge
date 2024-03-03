@@ -32,6 +32,12 @@ class FullyConnectedGraph:
     def get_adjacency_matrix(self, nodeList):
         return nx.to_numpy_array(self.graph, nodelist=nodeList)
     
+    def get_nodes(self):
+        return self.graph.nodes()
+
+    def get_edges(self):
+        return self.graph.edges()
+    
     def get_combinations(self, size):
         nodes = list(self.graph.nodes())
         combinations_list = list(combinations(nodes, size))

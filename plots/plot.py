@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 # Read data from JSON file
-file_name =  f"test_2024-02-29_14-07-22"
+file_name =  f"test_2024-03-03_14-01-09"
 with open((os.path.join("test_results", f"{file_name}.json")), 'r') as file:
     data = json.load(file)
 
@@ -14,7 +14,7 @@ simulations = [entry["Simulations"] for entry in data]
 
 # Plotting first figure: Worker & Task vs Simulation Count
 plt.figure(figsize=(8, 6))
-plt.plot(range(len(worker_task_simulations)), simulations, marker='o', linestyle='-', color='blue')
+plt.plot(range(len(worker_task_simulations)), simulations, marker='', linestyle='-', color='blue')
 plt.title('(Worker, Task) vs Simulation Count')
 plt.xlabel('(Worker, Task)')
 plt.ylabel('Simulation Count')
@@ -34,7 +34,7 @@ time_taken = [entry["Time_taken"] for entry in data]
 
 # Plotting second figure: Worker & Task vs Time Taken
 plt.figure(figsize=(8, 6))
-plt.plot(range(len(worker_task_time)), time_taken, marker='o', linestyle='-', color='red')
+plt.plot(range(len(worker_task_time)), time_taken, marker='', linestyle='-', color='red')
 plt.title('(Worker, Task) vs Computation Time')
 plt.xlabel('(Worker, Task)')
 plt.ylabel('Computation Time(seconds)')
