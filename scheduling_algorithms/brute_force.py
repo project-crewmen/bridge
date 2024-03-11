@@ -1,5 +1,6 @@
 import numpy as np
-from data_structures.graph import FullyConnectedGraph, Graph
+from data_structures.graph import Graph
+from data_structures.fully_connected_graph import FullyConnectedGraph
 
 
 class BruteForce:
