@@ -3,13 +3,13 @@ import time
 import os
 import json
 
-# from scheduling_algorithms.brute_force import BruteForce
-from scheduling_algorithms.brute_force_lightweight import BruteForce
+from scheduling_algorithms.brute_force import BruteForce
+# from scheduling_algorithms.brute_force_lightweight import BruteForce
 from utils.time import get_human_readable_timestamp
 
 # MAX_TESTS = 100
 MAX_TESTS = float('inf')
-WORKER_LIMIT = 20
+WORKER_LIMIT = 3
 
 if __name__ == "__main__":
     human_readable_time = get_human_readable_timestamp()
