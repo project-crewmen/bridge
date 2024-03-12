@@ -66,6 +66,9 @@ class Worker:
         # Deployments
         self.deployments: list[Task] = []
 
+    def __str__(self):
+        return f"{self.id}"
+
     def can_deploy_task(self, task: Task):
         is_cpu_enough: bool = self.cpu.can_use(task.cpu_required) 
         is_memory_enough: bool = self.memory.can_use(task.memory_required) 

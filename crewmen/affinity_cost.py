@@ -4,10 +4,11 @@ from crewmen.worker import Worker
 from crewmen.task import Task
 
 class AffinityCost:
-    def __init__(self, worker_graph: WorkerGraph, t1: Task, t2: Task):
+    def __init__(self, worker_graph: WorkerGraph, t1: Task, t2: Task, affinity: float):
         self.worker_graph = worker_graph
         self.t1 = t1
         self.t2 = t2
+        self.affinity = affinity
         self.wm = Crewmen()
 
     def get_affinity_cost(self):
@@ -23,6 +24,10 @@ class AffinityCost:
         if t1_deployed_worker is None or t2_deployed_worker is None:
             return None 
 
-        ac = self.worker_graph.network.get_edge_weight(t1_deployed_worker.id, t2_deployed_worker.id)
+        ac = self.wm.affinity_cost(
+            self.affinity,
+            self.worker_graph.network.get_edge_weight(t1_deployed_worker.id, t2_deployed_worker.id),
+            1.0
+        )
 
         return ac

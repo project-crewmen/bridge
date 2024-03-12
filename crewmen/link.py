@@ -6,3 +6,6 @@ class Link:
         self.id = id
         # Resource Requirements
         self.response_time = response_time
+
+    def __str__(self):
+        return f"{self.id}"
