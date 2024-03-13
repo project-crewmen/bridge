@@ -16,29 +16,17 @@ def record_deployment(dict, k, v):
     else:
         dict[k] = [v]
 
+def get_deployments_for_keys(deployments_map: Dict[str, Dict[str, list[str]]], keys: list[str]) -> list[Dict[str, list[str]]]:
+    return [deployments_map[key] for key in keys if key in deployments_map]
+
+
 if __name__ == "__main__":
     wm = Crewmen()
  
-    for w_amt in range(3, 4):
+    t = 0
+    for w_amt in range(3, 9):
         # @desc - We have to create Links, Workers individually. And then by considering workers as nodes and links as edges we can create a fully connected worker graph
         # For instance, for 3 workers we need 4 links. Note that, l0 is always the loopback link for each nodes
-        # l0 = Link(response_time=0.0)
-        # l1 = Link(response_time=0.01)
-        # l2 = Link(response_time=0.02)
-        # l3 = Link(response_time=0.03)
-
-        # Then workers can be created
-        # w1 = Worker("w_1")
-        # w2 = Worker("w_2")
-        # w3 = Worker("w_3")
-        
-        # Finally by placing (edge, weight) pairs, we can create a fully connected worker graph
-        # worker_graph.add_link(w1, w1, l0)
-        # worker_graph.add_link(w2, w2, l0)
-        # worker_graph.add_link(w3, w3, l0)
-        # worker_graph.add_link(w1, w2, l1)
-        # worker_graph.add_link(w1, w3, l2)
-        # worker_graph.add_link(w2, w3, l3)
         
         # Number of Links Required
         # Since Worker Graph is a FullyConnectedGraph, for n nodes, there exists (n(n-1))/2 edges
@@ -83,42 +71,79 @@ if __name__ == "__main__":
             for t in range(0, t_amt):
                 t_dict[f"t_{t}"] = Task(f"t_{t}")
 
-            print(', '.join([f"{k}: {v}" for k, v in t_dict.items()]))
+            print("Tasks: ")
+            print(', '.join([f"{k}: {v}" for k, v in t_dict.items()]), "\n")
 
             # Deployments
             # @desc - calculate and store all posible ways of r amount of tasks can be deployed on n amount of workers - nPr
             worker_permutations = list(permutations(w_dict_keys, t_amt))
-            print(worker_permutations)
+            # print(worker_permutations)
 
+            # Record net costs for each worker permutation. Note that this map called "Worker Subgraph Netcost List"
+            # Key: Specific deployment | Value: Net cost for that specific deployment
+            worker_subgraph_netcost_list: Dict[str, float] = {}
+
+            deployments_map: Dict[str, Dict[str, list[str]]] = {}
             
-            # Deploying Tasks on Workers
-            deployment_map: Dict[str, list[str]] = {}
+            d = 0
+            for w_perm in worker_permutations:        
+                # Clear workers for new deployments
+                for w in w_dict.values():
+                    w.clear_deployments()
+
+                # Deploying Tasks on Workers
+                deployment_map: Dict[str, list[str]] = {}
+                
+                i = 0
+                for w in w_perm:
+                    w_dict[w].deploy_task(t_dict[f"t_{i}"])
+                    record_deployment(deployment_map, w_dict[w].id, t_dict[f"t_{i}"].id)
+                    i += 1
             
-            # For now, each task depoly on exactly 1 worker
-            for i in range(0, len(t_dict)):
-                w_dict[f"w_{i}"].deploy_task(t_dict[f"t_{i}"])
-                record_deployment(deployment_map, w_dict[f"w_{i}"].id, t_dict[f"t_{i}"].id)
 
-            print("Deployments: ")
-            print(deployment_map)
+                # print("Deployments: ")
+                # print(deployment_map)
 
 
-            # Constructing Task Graph (Node: Task, Edge: Affinity)
-            task_graph = TaskGraph()
+                # Constructing Task Graph (Node: Task, Edge: Affinity)
+                task_graph = TaskGraph()
 
-            t_dict_keys = list(t_dict.keys())
-            for i in range(0, len(t_dict_keys)):
-                for j in range(i, len(t_dict_keys)):
-                    if i != j:
-                        task_graph.add_affinity_cost(t_dict[f"t_{i}"], t_dict[f"t_{j}"], AffinityCost(worker_graph, t_dict[f"t_{i}"], t_dict[f"t_{j}"], round(random.uniform(0, 1), 4)))
+                t_dict_keys = list(t_dict.keys())
+                for i in range(0, len(t_dict_keys)):
+                    for j in range(i, len(t_dict_keys)):
+                        if i != j:
+                            task_graph.add_affinity_cost(t_dict[f"t_{i}"], t_dict[f"t_{j}"], AffinityCost(worker_graph, t_dict[f"t_{i}"], t_dict[f"t_{j}"], round(random.uniform(0, 1), 4)))
+                
+                # print("\nTask Graph: ")
+                # print(task_graph.network.get_nodes(), "\n")
+                # print(task_graph.network.get_adjacency_matrix(task_graph.network.get_nodes()), "\n")
+                # print(task_graph.network.get_weighted_edge_list(), "\n")
+
+
+                # Crewmen Monitoring Functions
+                net_cost = wm.net_cost(task_graph.network.get_weighted_edge_list())
+                # print("Net Cost: ", net_cost, "\n")
+
+                # Record the netcost
+                worker_subgraph_netcost_list[f"d_{d}"] = net_cost
+
+                deployments_map[f"d_{d}"] = deployment_map
+                d += 1
+
+            # print(deployments_map)
+            # print(worker_subgraph_netcost_list)
             
-            print("\nTask Graph: ")
-            # print(task_graph.network.get_nodes(), "\n")
-            # print(task_graph.network.get_adjacency_matrix(task_graph.network.get_nodes()), "\n")
-            print(task_graph.network.get_weighted_edge_list(), "\n")
+            minimum_worker_subgraph_netcosts_list = wm.get_minimum_worker_subgraph_netcosts_list(worker_subgraph_netcost_list)
+            # print(minimum_worker_subgraph_netcosts_list)
+
+            best_possible_worker_arrangements = wm.get_best_possible_worker_arrangements(minimum_worker_subgraph_netcosts_list)
+            # print(best_possible_worker_arrangements)
 
 
-            # Crewmen Monitoring Functions
-            net_cost = wm.net_cost(task_graph.network.get_weighted_edge_list())
-            print("Net Cost: ", net_cost, "\n")
+            print(f"--- Test #{t} - Workers: {w_amt} | Tasks: {t_amt} ---")
+            print("Total number of permutations: ", len(worker_permutations))
+            print("Deployement Set (Least Net Cost): ")
+            print(get_deployments_for_keys(deployments_map, best_possible_worker_arrangements), "\n")
+
+            t += 1 
    

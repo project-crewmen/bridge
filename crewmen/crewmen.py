@@ -1,3 +1,5 @@
+from typing import Dict
+
 class Crewmen:
     def __init__(self):
         pass
@@ -25,3 +27,14 @@ class Crewmen:
                 hacs.append(ac)
         
         return hacs
+    
+    def get_minimum_worker_subgraph_netcosts_list(self, worker_subgraph_netcost_list: Dict[str, float]):
+        minimum_worker_subgraph_netcosts_list: Dict[str, float] = {}
+
+        min_netcost = min(worker_subgraph_netcost_list.values())
+        minimum_worker_subgraph_netcosts_list = {key: value for key, value in worker_subgraph_netcost_list.items() if value == min_netcost}
+
+        return minimum_worker_subgraph_netcosts_list
+    
+    def get_best_possible_worker_arrangements(self, minimum_worker_subgraph_netcosts_list: Dict[str, float]):
+        return list(minimum_worker_subgraph_netcosts_list.keys())

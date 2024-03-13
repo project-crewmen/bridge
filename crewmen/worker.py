@@ -18,6 +18,9 @@ class CPU:
             return self.cores_used
         else:
             return -1
+        
+    def reset(self):
+        self.cores_used = 0
 
 class Memory:
     def __init__(self, size):
@@ -36,6 +39,9 @@ class Memory:
             return self.size_used
         else:
             return -1
+        
+    def reset(self):
+        self.size_used = 0
 
 class Disk:
     def __init__(self, size):
@@ -54,6 +60,9 @@ class Disk:
             return self.size_used
         else:
             return -1
+        
+    def reset(self):
+        self.size_used = 0
 
 class Worker:
     def __init__(self, id = "w_" + uuid.uuid4().hex[:6]):
@@ -87,3 +96,9 @@ class Worker:
         else:
             print("deployment failed: not enough resources!")
             return None
+        
+    def clear_deployments(self):
+        self.deployments.clear()
+        self.cpu.reset()
+        self.memory.reset()
+        self.disk.reset()
