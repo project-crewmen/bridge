@@ -1,7 +1,10 @@
+from crewmen.globaldeployment import GlobalDeployment
+
 from typing import Dict
 
 class Crewmen:
     def __init__(self):
+        self.deployments_map: Dict[str, GlobalDeployment] = {}
         pass
 
     def affinity(self, m: int, d: float, m_x_y: int, d_x_y: float, w: float = 0.5):
@@ -38,3 +41,9 @@ class Crewmen:
     
     def get_best_possible_worker_arrangements(self, minimum_worker_subgraph_netcosts_list: Dict[str, float]):
         return list(minimum_worker_subgraph_netcosts_list.keys())
+    
+    def add_to_deployments_map(self, dep_id: str, dep: GlobalDeployment):
+        self.deployments_map[dep_id] = dep
+    
+    def get_deployments_for_keys(self, keys: list[str]) -> list[GlobalDeployment]:
+        return [self.deployments_map[key] for key in keys if key in self.deployments_map]
