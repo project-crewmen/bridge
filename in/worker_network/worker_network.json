@@ -1,0 +1,8 @@
+{
+  "used_workers": ["w0", "w1"],
+  "used_links": ["l0", "l1"],
+  "worker_graph": [
+    ["l0", "l1"],
+    ["l1", "l0"]
+  ]
+}

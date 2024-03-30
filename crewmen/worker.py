@@ -65,13 +65,13 @@ class Disk:
         self.size_used = 0
 
 class Worker:
-    def __init__(self, id = "w_" + uuid.uuid4().hex[:6]):
+    def __init__(self, id = "w_" + uuid.uuid4().hex[:6], cpu: int = 4, memory: int = 1024, disk: int = 4096):
         # Meta Data
         self.id = id
         # Resources
-        self.cpu: CPU = CPU(4)
-        self.memory: Memory = Memory(1024)
-        self.disk: Disk = Disk(4096)
+        self.cpu: CPU = CPU(cpu)
+        self.memory: Memory = Memory(memory)
+        self.disk: Disk = Disk(disk)
         # Deployments
         self.deployments: list[Task] = []
 

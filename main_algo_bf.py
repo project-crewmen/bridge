@@ -2,15 +2,18 @@ import gc
 import time
 import os
 import json
+from dotenv import load_dotenv
 
 from utils.time import get_human_readable_timestamp
-from scheduling_algorithms.brute_force_proper import BruteForce
+from scheduling_algorithms.bf.brute_force import BruteForce
 
 if __name__ == "__main__":
+    load_dotenv()
+    
     human_readable_time = get_human_readable_timestamp()
     file_name =  f"test_{human_readable_time}"
      
-    with open((os.path.join("test_results", f"{file_name}.json")), "a") as results_file:
+    with open((os.path.join("out/sim_results", f"{file_name}.json")), "a") as results_file:
         results_file.write("[\n")
 
         t = 0
