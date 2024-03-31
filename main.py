@@ -1,25 +1,37 @@
 import os
 import json
+import time
 
 from crewmen.worker import Worker
 from crewmen.link import Link
 from crewmen.worker_graph import WorkerGraph
 from crewmen.task import Task
+from crewmen.task_graph import TaskGraph
+from crewmen.affinity_cost import AffinityCost
 
-def find_worker(workers: list[Worker], id: str):
-    return next((worker for worker in workers if worker.id == id), None)
+from utils.crewmen_utils import find_worker, find_link, find_task
 
-def find_link(links: list[Link], id: str):
-    return next((link for link in links if link.id == id), None)
+from scheduling_algorithms.bf.bf import BruteForce
 
-def find_task(tasks: list[Task], id: str):
-    return next((task for task in tasks if task.id == id), None)
+def sched_algo_log_helper(w_amt, t_amt, perms, deps, min_netcost):
+    print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
+    print(f"Total number of permutations:\t\t{perms}")
+    print(f"Deployement Set (Least Net Cost):\t{len(deps)}")
+    # dep_maps: list[str] = []
+    # # print(deps)
+    # for d in deps:
+    #     dep_maps.append(d.get_display_text())
+
+    # print(dep_maps)
+
+    print("Minimum Netcost: ", min_netcost, "\n")
 
 if __name__ == "__main__":
     workers: list[Worker] = []
     links: list[Link] = []
     worker_graph = WorkerGraph()
     tasks: list[Task] = []
+    task_graph = TaskGraph()
 
     # Load, Validate & Construct Workers
     with open((os.path.join("in/workers", f"workers.json")), 'r') as file:
@@ -81,3 +93,40 @@ if __name__ == "__main__":
                 deploying_worker.deploy_task(task_to_be_deployed)
 
         print("Deployment successful")
+
+    
+    # Load, Validate & Construct Task Network
+    with open((os.path.join("in/task_network", f"task_network.json")), 'r') as file:
+        data = json.load(file)
+
+        data_used_tasks=data["used_tasks"]
+        data_task_graph=data["task_graph"]
+
+        for x in range(0, len(data_used_tasks)):
+            for y in range(0, len(data_used_tasks)):
+                if x != y:
+                    # Find Tasks
+                    x_task = find_task(tasks, data_used_tasks[x])
+                    y_task = find_task(tasks, data_used_tasks[y])
+
+                    # Find Affinity Cost
+                    associated_affinity_cost =  AffinityCost(worker_graph, x_task, y_task, data_task_graph[x][y])
+
+                    if x_task and y_task and associated_affinity_cost:
+                        task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
+
+        print("Task Graph setup successful")
+
+
+    # Evaluate using Brute Force Scheduling Algorithm
+    print("\n--- Brute Force Scheduling Algorithm ---")
+    start_time = time.time()  # Record the start time
+
+    bf = BruteForce(workers, tasks, worker_graph, task_graph)
+    perms, deps, min_netcost = bf.run()
+
+    sched_algo_log_helper(len(workers), len(tasks), perms, deps, min_netcost)     
+
+    end_time = time.time()  # Record the end time
+    elapsed_time = end_time - start_time  # Calculate the elapsed time
+    print(f"Time taken: {elapsed_time} seconds\n")

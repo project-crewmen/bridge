@@ -21,7 +21,7 @@ class AffinityCost:
             if self.t2 in w.deployments:
                 t2_deployed_worker = w
         
-        if t1_deployed_worker is None or t2_deployed_worker is None:
+        if t1_deployed_worker is None or t2_deployed_worker is None:            
             return None 
 
         ac = self.wm.affinity_cost(

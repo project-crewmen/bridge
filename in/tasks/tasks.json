@@ -10,5 +10,11 @@
     "cpu_required": 4,
     "memory_required": 1024,
     "disk_required": 4096
+  },
+  {
+    "id": "t2",
+    "cpu_required": 4,
+    "memory_required": 1024,
+    "disk_required": 4096
   }
 ]
