@@ -15,3 +15,6 @@ class WorkerGraph:
         self.workers.append(x)
         self.workers.append(y)
         self.network.add_edge(x.id, y.id, weight=weight.response_time)
+
+    def get_worker_graph_spec(self):
+        return self.network.get_adjacency_matrix(self.network.get_nodes())

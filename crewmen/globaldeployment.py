@@ -23,3 +23,6 @@ class GlobalDeployment:
 
     def __str__(self):
         return self.get_display_text()
+    
+    def get_global_deployment_spec(self):
+        return self.deployment_map

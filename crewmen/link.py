@@ -9,3 +9,9 @@ class Link:
 
     def __str__(self):
         return f"{self.id}"
+    
+    def get_link_spec(self):
+        return {
+            "id": self.id,
+            "response_time": self.response_time
+        }

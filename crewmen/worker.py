@@ -102,3 +102,11 @@ class Worker:
         self.cpu.reset()
         self.memory.reset()
         self.disk.reset()
+
+    def get_worker_spec(self):
+        return {
+            "id": self.id,
+            "cpu": self.cpu.cores,
+            "memory": self.memory.size,
+            "disk": self.disk.size
+        }

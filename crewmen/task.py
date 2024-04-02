@@ -11,3 +11,11 @@ class Task:
 
     def __str__(self):
         return f"{self.id}"
+    
+    def get_task_spec(self):
+        return {
+            "id": self.id,
+            "cpu_required": self.cpu_required,
+            "memory_required": self.memory_required,
+            "disk_required": self.disk_required
+        }

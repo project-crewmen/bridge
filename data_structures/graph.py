@@ -24,7 +24,8 @@ class Graph:
         self.graph.add_edge(x, y, weight=weight)
 
     def get_adjacency_matrix(self, nodeList):
-        return nx.to_numpy_array(self.graph, nodelist=nodeList)
+        adjacency_matrix = nx.to_numpy_array(self.graph, nodelist=nodeList)
+        return adjacency_matrix.tolist()
     
     def get_nodes(self):
         return self.graph.nodes()
@@ -38,8 +39,8 @@ class Graph:
         else:
             return None
     
-    def get_adjacency_matrix(self, nodeList):
-        return nx.to_numpy_array(self.graph, nodelist=nodeList)
+    # def get_adjacency_matrix(self, nodeList):
+    #     return nx.to_numpy_array(self.graph, nodelist=nodeList)
     
     def get_permutations(self, size):
         nodes = list(self.graph.nodes())

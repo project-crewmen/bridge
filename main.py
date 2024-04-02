@@ -32,85 +32,73 @@ if __name__ == "__main__":
     worker_graph = WorkerGraph()
     tasks: list[Task] = []
     task_graph = TaskGraph()
-
-    # Load, Validate & Construct Workers
-    with open((os.path.join("in/workers", f"workers.json")), 'r') as file:
+    
+    with open((os.path.join("in", f"log.json")), 'r') as file:
         data = json.load(file)
 
-        for entry in data:
+        # Load, Validate & Construct Workers
+        data_workers=data["workers"]
+        for entry in data_workers:
             workers.append(Worker(id=entry["id"], cpu=entry["cpu"], memory=entry["memory"], disk=entry["disk"]))
 
         print("Workers loading successful")
 
-    # Load, Validate & Construct Links
-    with open((os.path.join("in/links", f"links.json")), 'r') as file:
-        data = json.load(file)
+        # Load, Validate & Construct Links
+        data_links=data["links"]
 
-        for entry in data:
+        for entry in data_links:
             links.append(Link(id=entry["id"], response_time=entry["response_time"]))
 
         print("Links loading successful")
 
-    # Load, Validate & Construct Worker Network
-    with open((os.path.join("in/worker_network", f"worker_network.json")), 'r') as file:
-        data = json.load(file)
+        # Load, Validate & Construct Worker Network
+        data_worker_network=data["worker_network"]
 
-        data_used_workers=data["used_workers"]
-        data_used_links=data["used_links"]
-        data_worker_graph=data["worker_graph"]
-
-        for x in range(0, len(data_used_workers)):
-            for y in range(0, len(data_used_workers)):
+        for x in range(0, len(data_workers)):
+            for y in range(0, len(data_workers)):
                 # Find Workers
-                x_worker = find_worker(workers, data_used_workers[x])
-                y_worker = find_worker(workers, data_used_workers[y])
+                x_worker = find_worker(workers, data_workers[x])
+                y_worker = find_worker(workers, data_workers[y])
 
                 # Find Links
-                associated_link = find_link(links, data_worker_graph[x][y])
+                associated_link = find_link(links, data_worker_network[x][y])
 
                 if x_worker and y_worker and associated_link:
                     worker_graph.add_link(x_worker, y_worker, associated_link)
 
         print("Worker Graph setup successful")
 
-    # Load, Validate & Construct Tasks
-    with open((os.path.join("in/tasks", f"tasks.json")), 'r') as file:
-        data = json.load(file)
+        # Load, Validate & Construct Tasks
+        data_tasks=data["tasks"]
 
-        for entry in data:
+        for entry in data_tasks:
             tasks.append(Task(id=entry["id"], cpu_required=entry["cpu_required"], memory_required=entry["memory_required"], disk_required=entry["disk_required"]))
 
         print("Task loading successful")
 
-    # Load, Validate & Construct Deployments
-    with open((os.path.join("in/deps", f"deps.json")), 'r') as file:
-        data = json.load(file)
+        # Load, Validate & Construct Deployments
+        data_deployments=data["deployments"]
         
-        for key, values in data.items():
+        for key, values in data_deployments.items():
             deploying_worker = find_worker(workers, key)
             for value in values:
                 task_to_be_deployed = find_task(tasks, value)
                 deploying_worker.deploy_task(task_to_be_deployed)
 
         print("Deployment successful")
-
     
-    # Load, Validate & Construct Task Network
-    with open((os.path.join("in/task_network", f"task_network.json")), 'r') as file:
-        data = json.load(file)
+        # Load, Validate & Construct Task Network
+        data_task_network=data["task_network"]
 
-        data_used_tasks=data["used_tasks"]
-        data_task_graph=data["task_graph"]
-
-        for x in range(0, len(data_used_tasks)):
-            for y in range(0, len(data_used_tasks)):
+        for x in range(0, len(data_tasks)):
+            for y in range(0, len(data_tasks)):
                 if x != y:
                     # Find Tasks
-                    x_task = find_task(tasks, data_used_tasks[x])
-                    y_task = find_task(tasks, data_used_tasks[y])
+                    x_task = find_task(tasks, data_tasks[x])
+                    y_task = find_task(tasks, data_tasks[y])
 
                     # Find Affinity Cost
-                    associated_affinity_cost =  AffinityCost(worker_graph, x_task, y_task, data_task_graph[x][y])
+                    associated_affinity_cost =  AffinityCost(worker_graph, x_task, y_task, data_task_network[x][y])
 
                     if x_task and y_task and associated_affinity_cost:
                         task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)

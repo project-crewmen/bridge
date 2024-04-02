@@ -1,0 +1,44 @@
+{
+  "workers": [
+    { "id": "w_0", "cpu": 4, "memory": 1024, "disk": 4096 },
+    { "id": "w_1", "cpu": 4, "memory": 1024, "disk": 4096 },
+    { "id": "w_2", "cpu": 4, "memory": 1024, "disk": 4096 },
+    { "id": "w_3", "cpu": 4, "memory": 1024, "disk": 4096 },
+    { "id": "w_4", "cpu": 4, "memory": 1024, "disk": 4096 }
+  ],
+  "links": [
+    { "id": "l_0", "response_time": 0.0 },
+    { "id": "l_1", "response_time": 0.3607 },
+    { "id": "l_2", "response_time": 0.1408 },
+    { "id": "l_3", "response_time": 0.7196 },
+    { "id": "l_4", "response_time": 0.8007 },
+    { "id": "l_5", "response_time": 0.7323 },
+    { "id": "l_6", "response_time": 0.0939 },
+    { "id": "l_7", "response_time": 0.607 },
+    { "id": "l_8", "response_time": 0.8734 },
+    { "id": "l_9", "response_time": 0.2999 },
+    { "id": "l_10", "response_time": 0.7277 }
+  ],
+  "worker_graph": [
+    [0.0, 0.3607, 0.1408, 0.7196, 0.8007],
+    [0.3607, 0.0, 0.7323, 0.0939, 0.607],
+    [0.1408, 0.7323, 0.0, 0.8734, 0.2999],
+    [0.7196, 0.0939, 0.8734, 0.0, 0.7277],
+    [0.8007, 0.607, 0.2999, 0.7277, 0.0]
+  ],
+  "tasks": [
+    { "id": "t_0", "cpu_required": 1, "memory_required": 512, "disk_required": 1024 },
+    { "id": "t_1", "cpu_required": 1, "memory_required": 512, "disk_required": 1024 },
+    { "id": "t_2", "cpu_required": 1, "memory_required": 512, "disk_required": 1024 },
+    { "id": "t_3", "cpu_required": 1, "memory_required": 512, "disk_required": 1024 },
+    { "id": "t_4", "cpu_required": 1, "memory_required": 512, "disk_required": 1024 }
+  ],
+  "deployments": { "w_0": ["t_0"], "w_1": ["t_1"], "w_2": ["t_2"], "w_3": ["t_3"], "w_4": ["t_4"] },
+  "task_affinity_graph": [
+    [0.0, 0.0008, 0.1268, 0.4591, 0.1946],
+    [0.0008, 0.0, 0.231, 0.077, 0.1312],
+    [0.1268, 0.231, 0.0, 0.5083, 0.9448],
+    [0.4591, 0.077, 0.5083, 0.0, 0.6015],
+    [0.1946, 0.1312, 0.9448, 0.6015, 0.0]
+  ]
+}
