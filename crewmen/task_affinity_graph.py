@@ -17,3 +17,6 @@ class TaskAffinityGraph:
 
     def get_task_affinity_graph_spec(self):
         return self.network.get_adjacency_matrix(self.network.get_nodes())
+    
+    def __str__(self):
+        return str(self.network.get_adjacency_matrix(self.network.get_nodes()))

@@ -8,10 +8,9 @@ from crewmen.worker_graph import WorkerGraph
 from crewmen.task import Task
 from crewmen.task_affinity_graph import TaskAffinityGraph
 
-from utils.crewmen_utils import load_all, load_deployments
+from utils.crewmen_utils import load_all
 
 from scheduling_algorithms.bf.bf import BruteForce
-from scheduling_algorithms.bin_pack.bin_pack import BinPack
 
 def sched_algo_log_helper(w_amt, t_amt, perms, deps, min_netcost):
     print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
@@ -46,32 +45,8 @@ if __name__ == "__main__":
         bf = BruteForce(workers, tasks, worker_graph, task_affinity_graph)
         perms, deps, min_netcost = bf.run()
 
-        # sched_algo_log_helper(len(workers), len(tasks), perms, deps, min_netcost)
-        print("Netcost: ", min_netcost)     
+        sched_algo_log_helper(len(workers), len(tasks), perms, deps, min_netcost)     
 
         end_time = time.time()  # Record the end time
         elapsed_time = end_time - start_time  # Calculate the elapsed time
         print(f"Time taken: {elapsed_time} seconds\n")
-
-
-        # Reset Deployment
-        for w in workers:
-            w.clear_deployments()
-
-        load_deployments(data, workers, tasks)
-
-
-        # Evaluate using Brute Force Scheduling Algorithm
-        print("\n--- Binpack Scheduling Algorithm ---")
-        start_time = time.time()  # Record the start time
-
-        bp = BinPack(workers, tasks, worker_graph, task_affinity_graph)
-        binpacked_deployment, net_cost = bp.run()
-
-        # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost)   
-        print("Netcost: ", net_cost)       
-
-        end_time = time.time()  # Record the end time
-        elapsed_time = end_time - start_time  # Calculate the elapsed time
-        print(f"Time taken: {elapsed_time} seconds\n")
-

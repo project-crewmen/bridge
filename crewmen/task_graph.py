@@ -15,3 +15,6 @@ class TaskGraph:
         self.tasks.append(x)
         self.tasks.append(y)
         self.network.add_edge(x.id, y.id, weight=weight.get_affinity_cost())
+
+    def __str__(self):
+        return str(self.network.get_adjacency_matrix(self.network.get_nodes()))

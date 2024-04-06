@@ -110,3 +110,13 @@ class Worker:
             "memory": self.memory.size,
             "disk": self.disk.size
         }
+    
+    def get_deployment_ids(self):
+        if(len(self.deployments) == 0):
+            return []
+        else:
+            ids: list[str] = []
+            for t in self.deployments:
+                ids.append(t.id)
+
+            return ids

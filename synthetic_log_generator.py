@@ -29,7 +29,7 @@ if __name__ == "__main__":
         task_affinity_graph = TaskAffinityGraph()
 
         # Generate Workers
-        w_amt: int = 5
+        w_amt: int = 10
         for w in range(0, w_amt):
             worker: Worker = Worker(id=f"w_{w}")
             workers.append(worker)
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                     k += 1
 
         # Generate Tasks
-        t_amt: int = 5
+        t_amt: int = 10
         for t in range(0, t_amt):
             task: Task = Task(id=f"t_{t}")
             tasks.append(task)

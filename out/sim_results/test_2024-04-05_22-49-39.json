@@ -1,0 +1,14 @@
+[
+  {
+    "Test": 0,
+    "Workers": 3,
+    "Tasks": 2,
+    "Total number of permutations": 6,
+    "Deployement Set (Least Net Cost)": [
+      "Deployment ID: d_3 | Deployment Map: {'w_1': ['t_0'], 'w_2': ['t_1']}",
+      "Deployment ID: d_5 | Deployment Map: {'w_2': ['t_0'], 'w_1': ['t_1']}"
+    ],
+    "Minimum Netcost": 0.07500000000000001,
+    "Time_taken": 0.0009725093841552734
+  }
+]
