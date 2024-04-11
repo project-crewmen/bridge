@@ -48,13 +48,13 @@ class BinPack:
 
         k = 0
         for candidate_worker in self.workers:
-            if(k < len(self.tasks)-1):
+            if(k < len(self.tasks)):
                 for t in range(k, len(self.tasks)):
                     deploying_task = self.tasks[t]
                     if(candidate_worker.can_deploy_task(deploying_task)):
                         candidate_worker.deploy_task(deploying_task)
                         binpacked_deployment.record_deployment(candidate_worker.id, deploying_task.id)
-                        k = t
+                        k = t+1
                     else:
                         k = t
                         break
@@ -78,6 +78,8 @@ class BinPack:
 
                     if x_task and y_task and associated_affinity_cost:
                         task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
+
+        # print(task_graph)
 
 
         # Crewmen Monitoring Functions

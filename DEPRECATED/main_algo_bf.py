@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 elapsed_time = end_time - start_time  # Calculate the elapsed time
                 print(f"Time taken: {elapsed_time} seconds\n")
 
-                 # Output to a JSON file
+                # Output to a JSON file
                 # Create a dictionary with the test results
                 test_result = {
                     "Test": t,

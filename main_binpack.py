@@ -31,7 +31,7 @@ if __name__ == "__main__":
     tasks: list[Task] = []
     task_affinity_graph = TaskAffinityGraph()
     
-    with open((os.path.join("in", f"log_2024-04-06_14-10-37.json")), 'r') as file:
+    with open((os.path.join("in", f"log_2024-04-02_12-38-18.json")), 'r') as file:
         data = json.load(file)
 
         # Load All

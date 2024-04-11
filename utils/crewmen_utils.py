@@ -48,7 +48,7 @@ def load_workers(data, workers: list[Worker]):
     for entry in data_workers:
         workers.append(Worker(id=entry["id"], cpu=entry["cpu"], memory=entry["memory"], disk=entry["disk"]))
 
-    print("Workers loading successful")
+    # print("Workers loading successful")
 
 def load_links(data, links: list[Link]):
     data_links=data["links"]
@@ -56,7 +56,7 @@ def load_links(data, links: list[Link]):
     for entry in data_links:
         links.append(Link(id=entry["id"], response_time=entry["response_time"]))
 
-    print("Links loading successful")
+    # print("Links loading successful")
 
 def load_worker_graph(data, worker_graph: WorkerGraph, workers: list[Worker], links: list[Link]):
     data_workers=data["workers"]
@@ -71,7 +71,7 @@ def load_worker_graph(data, worker_graph: WorkerGraph, workers: list[Worker], li
                 worker_graph.add_link(find_worker(workers, f"w_{i}"), find_worker(workers, f"w_{j}"), find_link(links, f"l_{k}"))
                 k += 1
 
-    print("Worker Graph setup successful")
+    # print("Worker Graph setup successful")
 
 def load_tasks(data, tasks: list[Task]):
     data_tasks=data["tasks"]
@@ -79,7 +79,7 @@ def load_tasks(data, tasks: list[Task]):
     for entry in data_tasks:
         tasks.append(Task(id=entry["id"], cpu_required=entry["cpu_required"], memory_required=entry["memory_required"], disk_required=entry["disk_required"]))
 
-    print("Task loading successful")
+    # print("Task loading successful")
 
 def load_deployments(data, workers: list[Worker], tasks: list[Task]):
     data_deployments=data["deployments"]
@@ -90,7 +90,7 @@ def load_deployments(data, workers: list[Worker], tasks: list[Task]):
             task_to_be_deployed = find_task(tasks, value)
             deploying_worker.deploy_task(task_to_be_deployed)
 
-    print("Deployment successful")
+    # print("Deployment successful")
 
 def load_task_affinity_graph(data, tasks: list[Task], task_affinity_graph: TaskAffinityGraph):
     data_tasks=data["tasks"]
@@ -106,7 +106,7 @@ def load_task_affinity_graph(data, tasks: list[Task], task_affinity_graph: TaskA
                 if x_task and y_task:
                     task_affinity_graph.add_affinity(x_task, y_task, data_task_affinity_graph[i][j])
 
-    print("Task Affinity Graph setup successful")
+    # print("Task Affinity Graph setup successful")
     # print(task_affinity_graph)
 
 def load_all(data, workers: list[Worker], links: list[Link], worker_graph: WorkerGraph, tasks: list[Task], task_affinity_graph: TaskAffinityGraph):
