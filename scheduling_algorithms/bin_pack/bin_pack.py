@@ -7,10 +7,8 @@ from crewmen.globaldeployment import GlobalDeployment
 from crewmen.crewmen import Crewmen
 from crewmen.affinity_cost import AffinityCost
 
-from utils.crewmen_utils import get_worker_ids, find_worker, find_task, find_link
+from utils.crewmen_utils import  find_task
 
-from itertools import permutations
-from typing import Dict
 
 class BinPack:
     def __init__(self, workers: list[Worker], tasks: list[Task], worker_graph: WorkerGraph, task_affinity_graph: TaskAffinityGraph):

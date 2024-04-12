@@ -19,6 +19,13 @@ class CPU:
         else:
             return -1
         
+    def free(self, cores):
+        if self.can_use(cores):
+            self.cores_used -= cores
+            return self.cores_used
+        else:
+            return -1
+        
     def reset(self):
         self.cores_used = 0
 
@@ -40,6 +47,13 @@ class Memory:
         else:
             return -1
         
+    def free(self, size):
+        if self.can_use(size):
+            self.size_used -= size
+            return self.size_used
+        else:
+            return -1
+        
     def reset(self):
         self.size_used = 0
 
@@ -57,6 +71,13 @@ class Disk:
     def use(self, size):
         if self.can_use(size):
             self.size_used += size
+            return self.size_used
+        else:
+            return -1
+
+    def free(self, size):
+        if self.can_use(size):
+            self.size_used -= size
             return self.size_used
         else:
             return -1
@@ -95,6 +116,18 @@ class Worker:
             self.deployments.append(task)
         else:
             print("deployment failed: not enough resources!")
+            return None
+        
+    def remove_task(self, task: Task):
+        if task in self.deployments:
+            # Free Resources
+            self.cpu.free(task.cpu_required)
+            self.memory.free(task.memory_required)
+            self.disk.free(task.disk_required)
+            # Deploy the task
+            self.deployments.remove(task)
+        else:
+            print("task removing failed!")
             return None
         
     def clear_deployments(self):

@@ -2,7 +2,7 @@ import json
 import os
 from dotenv import load_dotenv
 
-from utils.plotter import Plotter
+from utils.plot.plotter import Plotter
 
 if __name__ == "__main__":
     # Load environment variables from .env file

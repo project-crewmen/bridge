@@ -24,8 +24,8 @@ if __name__ == "__main__":
     if not os.path.exists(logs_folder):
         os.makedirs(logs_folder)
 
-    for x in range(3, 11):
-        file_name =  f"log_{x}_w_{x}_t{x}"
+    for x in range(3, 104):
+        file_name =  f"{x}_log"
 
         with open((os.path.join(f"in/{folder_name}", f"{file_name}.json")), "a") as results_file:
             workers: list[Worker] = []

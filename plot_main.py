@@ -1,16 +1,15 @@
 import json
 import os
 from dotenv import load_dotenv
-import matplotlib.pyplot as plt
 
-from utils.plotter import Plotter
+from utils.plot.multi_plot import MultiPlotter
 
 if __name__ == "__main__":
     # Load environment variables from .env file
     load_dotenv()
 
     # Access environment variables
-    sim_result_to_plot = f"logs_2024-04-11_00-14-05"
+    sim_result_to_plot = os.getenv("TARGET_LOG")
 
     print(sim_result_to_plot)
 
@@ -25,35 +24,35 @@ if __name__ == "__main__":
 
         # Extracting worker, task, and simulation count
         workers_tasks = [(entry["Workers"], entry["Tasks"]) for entry in data]
-        bf_worker_task_netcost = [(entry["Workers"], entry["Tasks"], entry["BF NetCost"]) for entry in data]
+        # bf_worker_task_netcost = [(entry["Workers"], entry["Tasks"], entry["BF NetCost"]) for entry in data]
         bp_worker_task_netcost = [(entry["Workers"], entry["Tasks"], entry["BP NetCost"]) for entry in data]
-        bf_netcost = [entry["BF NetCost"] for entry in data]
+        m3c_worker_task_netcost = [(entry["Workers"], entry["Tasks"], entry["M3C NetCost"]) for entry in data]
+        # bf_netcost = [entry["BF NetCost"] for entry in data]
         bp_netcost = [entry["BP NetCost"] for entry in data]
+        m3c_netcost = [entry["M3C NetCost"] for entry in data]
 
-        # Plotting first figure: Worker & Task vs Simulation Count
-        bf_worker_task_netcost_plot = Plotter(range(len(bf_worker_task_netcost)), bf_netcost, 'BruteForce: (Worker, Task) vs NetCost', '(Worker, Task)', 'NetCost' )
-        bp_worker_task_netcost_plot = Plotter(range(len(bp_worker_task_netcost)), bp_netcost, 'BinPack: (Worker, Task) vs NetCost', '(Worker, Task)', 'NetCost')
-        
-        bf_worker_task_netcost_plot.plot(xticks=workers_tasks, color='red')
-        bp_worker_task_netcost_plot.plot(xticks=workers_tasks, color='blue')
+        plt1 = MultiPlotter('(Worker, Task) vs NetCost', '(Worker, Task)', 'NetCost')
+        # plt1.plot(range(len(bf_worker_task_netcost)), bf_netcost, "Brute Force")
+        plt1.plot(range(len(bp_worker_task_netcost)), bp_netcost, "Bin Pack")
+        plt1.plot(range(len(m3c_worker_task_netcost)), m3c_netcost, "M3C")
+        plt1.show()
 
-        # Save the first plot as image
-        bf_worker_task_netcost_plot.save_plot(os.path.join(figures_folder, f"bf_worker_task_netcost.png"), xticks=workers_tasks, color='red')
-        bp_worker_task_netcost_plot.save_plot(os.path.join(figures_folder, f"bp_worker_task_netcost.png"), xticks=workers_tasks, color='blue')
+        plt1.save(os.path.join(figures_folder, f"worker_task_netcost.png"))
+
 
         # Extracting worker, task, and time taken
-        bf_worker_task_time = [(entry["Workers"], entry["Tasks"], entry["BF Computation Time"]) for entry in data]
+        # bf_worker_task_time = [(entry["Workers"], entry["Tasks"], entry["BF Computation Time"]) for entry in data]
         bp_worker_task_time = [(entry["Workers"], entry["Tasks"], entry["BP Computation Time"]) for entry in data]
-        bf_time_taken = [entry["BF Computation Time"] for entry in data]
+        m3c_worker_task_time = [(entry["Workers"], entry["Tasks"], entry["M3C Computation Time"]) for entry in data]
+        # bf_time_taken = [entry["BF Computation Time"] for entry in data]
         bp_time_taken = [entry["BP Computation Time"] for entry in data]
-
-        # Plotting second figure: Worker & Task vs Time Taken
-        bf_worker_task_sim_counts_plot = Plotter(range(len(bf_worker_task_time)), bf_time_taken, 'BruteForce: (Worker, Task) vs Computation Time', '(Worker, Task)', 'Computation Time(seconds)')
-        bp_worker_task_sim_counts_plot = Plotter(range(len(bp_worker_task_time)), bp_time_taken, 'BinPack: (Worker, Task) vs Computation Time', '(Worker, Task)', 'Computation Time(seconds)')
+        m3c_time_taken = [entry["M3C Computation Time"] for entry in data]
         
-        bf_worker_task_sim_counts_plot.plot(xticks=workers_tasks, color='red')
-        bp_worker_task_sim_counts_plot.plot(xticks=workers_tasks, color='blue')
 
-        # Save the second plot as image
-        bf_worker_task_sim_counts_plot.save_plot(os.path.join(figures_folder, f"bf_worker_task_time_taken.png"), xticks=workers_tasks, color='red')
-        bp_worker_task_sim_counts_plot.save_plot(os.path.join(figures_folder, f"bp_worker_task_time_taken.png"), xticks=workers_tasks, color='blue')
+        plt2 = MultiPlotter('(Worker, Task) vs Computation Time', '(Worker, Task)', 'Computation Time(seconds)')
+        # plt2.plot(range(len(bf_worker_task_time)), bf_time_taken, "Brute Force")
+        plt2.plot(range(len(bp_worker_task_time)), bp_time_taken, "Bin Pack")
+        plt2.plot(range(len(m3c_worker_task_time)), m3c_time_taken, "M3C")
+        plt2.show()
+
+        plt2.save(os.path.join(figures_folder, f"worker_task_computation_time.png"))
