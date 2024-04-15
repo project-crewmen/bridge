@@ -72,7 +72,10 @@ class Graph:
                 # Ignore self-edges
                 if neighbor == node:
                     continue
-
+                # Check if the edge (neighbor, node) exists, if so, ignore it
+                if (neighbor, node) in edges_with_weights:
+                    continue
+                
                 weight = self.get_edge_weight(node, neighbor)
                 if weight is not None:
                     edge = (node, neighbor)

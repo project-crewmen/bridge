@@ -22,6 +22,16 @@ class BruteForce:
     def run(self):
         wm = Crewmen()
 
+        # Save previous deployment
+        previous_deployment = GlobalDeployment(f"previous_deployment")
+
+        for w in self.workers:
+               t_ids = w.get_deployment_ids()
+               for t in t_ids:
+                    previous_deployment.record_deployment(w.id, t)
+
+        # print(previous_deployment)
+
         # print(self.worker_graph.network.get_adjacency_matrix(self.worker_graph.network.get_nodes()))   
         # print(self.task_graph.network.get_adjacency_matrix(self.task_graph.network.get_nodes()))        
 
@@ -90,5 +100,12 @@ class BruteForce:
         best_possible_worker_arrangements = wm.get_best_possible_worker_arrangements(minimum_worker_subgraph_netcosts_list)
         # print(best_possible_worker_arrangements)
 
-        return len(worker_permutations), wm.get_deployments_for_keys(best_possible_worker_arrangements), minimum_worker_subgraph_netcosts_list[best_possible_worker_arrangements[0]]
+        deployments = wm.get_deployments_for_keys(best_possible_worker_arrangements)
+
+        bf_deployment = deployments[0]
+
+        total_colocations = bf_deployment.get_total_colocations(previous_deployment.deployment_map)
+        
+
+        return len(worker_permutations), wm.get_deployments_for_keys(best_possible_worker_arrangements), minimum_worker_subgraph_netcosts_list[best_possible_worker_arrangements[0]], total_colocations
    

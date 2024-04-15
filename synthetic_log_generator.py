@@ -24,7 +24,7 @@ if __name__ == "__main__":
     if not os.path.exists(logs_folder):
         os.makedirs(logs_folder)
 
-    for x in range(3, 104):
+    for x in range(3, 103):
         file_name =  f"{x}_log"
 
         with open((os.path.join(f"in/{folder_name}", f"{file_name}.json")), "a") as results_file:
@@ -38,7 +38,7 @@ if __name__ == "__main__":
             # Generate Workers
             w_amt: int = x
             for w in range(0, w_amt):
-                worker: Worker = Worker(id=f"w_{w}")
+                worker: Worker = Worker(id=f"w_{w}", cpu=4, memory=random.randint(1024, 1024*4), disk=random.randint(4096, 4096*4))
                 workers.append(worker)
 
             # Generate Links
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             # Generate Tasks
             t_amt: int = x
             for t in range(0, t_amt):
-                task: Task = Task(id=f"t_{t}")
+                task: Task = Task(id=f"t_{t}", cpu_required=1, memory_required=random.randint(512, 1024), disk_required=random.randint(1024, 4096))
                 tasks.append(task)
 
             # Generate Deployment

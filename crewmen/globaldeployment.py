@@ -39,5 +39,15 @@ class GlobalDeployment:
     def get_global_deployment_spec(self):
         return self.deployment_map
     
+    def get_total_colocations(self, comparing_deployment_map: Dict[str, list[str]]):
+        total_changed_values = 0
+
+        for key, values in self.deployment_map.items():
+            for value in values:
+                if value not in comparing_deployment_map[key]:
+                    total_changed_values += 1
+
+        return total_changed_values
+    
     def __str__(self):
         return self.get_display_text()

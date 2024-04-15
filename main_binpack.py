@@ -12,7 +12,7 @@ from utils.crewmen_utils import load_all
 
 from scheduling_algorithms.bin_pack.bin_pack import BinPack
 
-def sched_algo_log_helper(w_amt, t_amt, deps, min_netcost):
+def sched_algo_log_helper(w_amt, t_amt, deps, min_netcost, total_colocations):
     print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
     print(f"Deployement Set (Least Net Cost):\t{deps}")
     # dep_maps: list[str] = []
@@ -23,6 +23,7 @@ def sched_algo_log_helper(w_amt, t_amt, deps, min_netcost):
     # print(dep_maps)
 
     print("Minimum Netcost: ", min_netcost, "\n")
+    print("Total Colocations: ", total_colocations, "\n")
 
 if __name__ == "__main__":
     workers: list[Worker] = []
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     tasks: list[Task] = []
     task_affinity_graph = TaskAffinityGraph()
     
-    with open((os.path.join("in", f"log_2024-04-02_12-38-18.json")), 'r') as file:
+    with open((os.path.join("in", f"logs_2024-04-15_20-55-05/5_log.json")), 'r') as file:
         data = json.load(file)
 
         # Load All
@@ -42,9 +43,9 @@ if __name__ == "__main__":
         start_time = time.time()  # Record the start time
 
         bp = BinPack(workers, tasks, worker_graph, task_affinity_graph)
-        binpacked_deployment, net_cost = bp.run()
+        binpacked_deployment, net_cost, total_colocations = bp.run()
 
-        sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost)     
+        sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost, total_colocations)     
 
         end_time = time.time()  # Record the end time
         elapsed_time = end_time - start_time  # Calculate the elapsed time

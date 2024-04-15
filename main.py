@@ -5,19 +5,25 @@ import time
 import re
 from dotenv import load_dotenv
 
+from crewmen.crewmen import Crewmen
 from crewmen.worker import Worker
 from crewmen.link import Link
 from crewmen.worker_graph import WorkerGraph
 from crewmen.task import Task
+from crewmen.task_graph import TaskGraph
 from crewmen.task_affinity_graph import TaskAffinityGraph
+from crewmen.globaldeployment import GlobalDeployment
+from crewmen.affinity_cost import AffinityCost
 
 from utils.crewmen_utils import load_all, load_deployments
+from utils.crewmen_utils import  find_task
+from utils.graph_visualization.graph_visializer import GraphVisulizer
 
 from scheduling_algorithms.bf.bf import BruteForce
 from scheduling_algorithms.bin_pack.bin_pack import BinPack
 from scheduling_algorithms.m3c.m3c import M3C
 
-def sched_algo_log_helper(w_amt, t_amt, perms, deps, min_netcost):
+def sched_algo_log_helper(w_amt, t_amt, perms, deps, bf_net_cost):
     print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
     print(f"Total number of permutations:\t\t{perms}")
     print(f"Deployement Set (Least Net Cost):\t{len(deps)}")
@@ -28,7 +34,7 @@ def sched_algo_log_helper(w_amt, t_amt, perms, deps, min_netcost):
 
     # print(dep_maps)
 
-    print("Minimum Netcost: ", min_netcost, "\n")
+    print("Minimum Netcost: ", bf_net_cost, "\n")
 
 
 def alphanumeric_sort_key(filename):
@@ -56,7 +62,6 @@ if __name__ == "__main__":
         sorted_filenames: list[str] = []
         for filename in os.listdir(os.path.join("in", log_dir_name)):
             if filename.endswith(".json"):  # Check for JSON files only
-                # filepath = os.path.join("in", log_dir_name, filename)
                 sorted_filenames.append(filename)
 
         sorted_filenames = sorted(sorted_filenames, key=alphanumeric_sort_key)
@@ -76,15 +81,53 @@ if __name__ == "__main__":
 
                     print(f"\nWorkers: {len(workers)} | Tasks: {len(tasks)}")
 
+                    # Base Setup
+                    wm = Crewmen()
+
+                    # Save previous deployment
+                    previous_deployment = GlobalDeployment(f"previous_deployment")
+
+                    for w in workers:
+                        t_ids = w.get_deployment_ids()
+                        for tid in t_ids:
+                                previous_deployment.record_deployment(w.id, tid)
+
+                    # Constructing Task Graph (Node: Task, Edge: Affinity)
+                    task_graph = TaskGraph()
+
+                    for i in range(0, len(tasks)):
+                        for j in range(i, len(tasks)):
+                                if i != j:
+                                    # Find Tasks
+                                    x_task = find_task(tasks, f"t_{i}")
+                                    y_task = find_task(tasks, f"t_{j}")
+
+                                    # Find Affinity Cost
+                                    associated_affinity_cost =  AffinityCost(worker_graph, x_task, y_task, task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
+
+                                    if x_task and y_task and associated_affinity_cost:
+                                        task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)       
+
+
+                    # print(task_graph)
+
+                    # gv1 = GraphVisulizer(task_graph.network.graph)
+                    # gv1.show()
+
+                    # Net Cost
+                    initial_net_cost = wm.net_cost(task_graph.network.get_weighted_edge_list())
+                    # print(initial_net_cost)                         
+
                     # # Evaluate using Brute Force Scheduling Algorithm
                     # print("\n--- Brute Force Scheduling Algorithm ---")
                     # start_time = time.time()  # Record the start time
 
                     # bf = BruteForce(workers, tasks, worker_graph, task_affinity_graph)
-                    # perms, deps, min_netcost = bf.run()
+                    # perms, deps, bf_net_cost, bf_total_colocations = bf.run()
 
-                    # # sched_algo_log_helper(len(workers), len(tasks), perms, deps, min_netcost)
-                    # print("Netcost: ", min_netcost)     
+                    # # sched_algo_log_helper(len(workers), len(tasks), perms, deps, bf_net_cost)
+                    # print("Netcost: ", bf_net_cost)     
+                    # print("Total Colocations: ", bf_total_colocations)     
 
                     # end_time = time.time()  # Record the end time
                     # bf_elapsed_time = end_time - start_time  # Calculate the elapsed time
@@ -98,31 +141,42 @@ if __name__ == "__main__":
                     load_deployments(data, workers, tasks)
 
 
+
+
                     # Evaluate using Binpack Force Scheduling Algorithm
                     print("\n--- Binpack Scheduling Algorithm ---")
                     start_time = time.time()  # Record the start time
 
                     bp = BinPack(workers, tasks, worker_graph, task_affinity_graph)
-                    binpacked_deployment, net_cost = bp.run()
+                    binpacked_deployment, bp_net_cost, bp_total_colocations = bp.run()
 
-                    # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost)   
-                    print("Netcost: ", net_cost)       
+                    # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, bp_net_cost)   
+                    print("Netcost: ", bp_net_cost)    
+                    print("Total Colocations: ", bp_total_colocations)      
 
                     end_time = time.time()  # Record the end time
                     bp_elapsed_time = end_time - start_time  # Calculate the elapsed time
                     print(f"Time taken: {bp_elapsed_time} seconds\n")
 
 
+                    # Reset Deployment
+                    for w in workers:
+                        w.clear_deployments()
 
-                    # Evaluate using M3C Force Scheduling Algorithm
-                    print("\n--- Binpack Scheduling Algorithm ---")
+                    load_deployments(data, workers, tasks)
+
+
+
+                    # Evaluate using M3C Scheduling Algorithm
+                    print("\n--- M3C Scheduling Algorithm ---")
                     start_time = time.time()  # Record the start time
 
                     m3c = M3C(workers, tasks, worker_graph, task_affinity_graph)
-                    m3c_deployment, m3c_net_cost = m3c.run()
+                    m3c_deployment, m3c_net_cost, m3c_total_colocations = m3c.run()
 
                     # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost)   
-                    print("Netcost: ", m3c_net_cost)       
+                    print("Netcost: ", m3c_net_cost)        
+                    print("Total Colocations: ", m3c_total_colocations)       
 
                     end_time = time.time()  # Record the end time
                     m3c_elapsed_time = end_time - start_time  # Calculate the elapsed time
@@ -134,12 +188,16 @@ if __name__ == "__main__":
                         "Test": t,
                         "Workers": len(workers),
                         "Tasks": len(tasks),
-                        # "BF NetCost": min_netcost,
+                        "Initial NetCost": initial_net_cost,
+                        # "BF NetCost": bf_net_cost,
                         # "BF Computation Time": bf_elapsed_time,
-                        "BP NetCost": net_cost,
+                        # "BF Total Colocations": bf_total_colocations,
+                        "BP NetCost": bp_net_cost,
                         "BP Computation Time": bp_elapsed_time,
+                        "BP Total Colocations": bp_total_colocations,
                         "M3C NetCost": m3c_net_cost,
                         "M3C Computation Time": m3c_elapsed_time,
+                        "M3C Total Colocations": m3c_total_colocations,
                     }
 
                     # Convert the dictionary to a JSON string

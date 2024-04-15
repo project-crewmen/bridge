@@ -7,7 +7,7 @@ from crewmen.globaldeployment import GlobalDeployment
 from crewmen.crewmen import Crewmen
 from crewmen.affinity_cost import AffinityCost
 
-from utils.crewmen_utils import  find_task
+from utils.crewmen_utils import  find_task, find_worker
 
 
 class BinPack:
@@ -24,34 +24,65 @@ class BinPack:
         previous_deployment = GlobalDeployment(f"previous_deployment")
 
         for w in self.workers:
-            t_ids = w.get_deployment_ids()
-            previous_deployment.record_deployment(w.id, t_ids)
+               t_ids = w.get_deployment_ids()
+               for t in t_ids:
+                    previous_deployment.record_deployment(w.id, t)
 
         # print(previous_deployment)
+        
+        # Sort workers based on CPU usage
+        sorted_workers = sorted(self.workers, key=lambda x: x.cpu.cores - x.cpu.cores_used, reverse=True)
 
-        # Clear previous deployment
-        for w in self.workers:
-            w.clear_deployments()
-
-        cleared_deployment = GlobalDeployment(f"cleared_deployment")
+        # Create a new deployment
+        binpacked_deployment = GlobalDeployment(f"binpacked_deployment")
 
         for w in self.workers:
             t_ids = w.get_deployment_ids()
-            cleared_deployment.record_deployment(w.id, t_ids)
+            for t in t_ids:
+                binpacked_deployment.record_deployment(w.id, t)
 
-        # print(cleared_deployment)
+        # print("binpacked_deployment", binpacked_deployment)
 
-        # Get the first worker and deploy tasks as much as possible, then move to next worker, and continue + Record the new deployment
-        binpacked_deployment = GlobalDeployment(f"binpacked_deployment")
+        # gv1 = GraphVisulizer(self.task_affinity_graph.network.graph)
+        # gv1.show()
+
+        # Find the tasks with high affinites
+        # Net Cost
+        net_cost = wm.net_cost(self.task_affinity_graph.network.get_weighted_edge_list())
+        # print("initial netcost:", net_cost)
+
+        # Get Affinity Cost Threshold
+        t = wm.affinity_cost_threshold(self.task_affinity_graph.network.get_weighted_edge_list())
+        # print(t)
+
+        # Calculate Hight Affinity Set
+        has = wm.high_affinity_costs_set(self.task_affinity_graph.network.get_weighted_edge_list(), t)
+        # print(has)
+
+        unique_tasks = []
+
+        for u, v, w in has:
+            if u not in unique_tasks:
+                unique_tasks.append(u)
+            if v not in unique_tasks:
+                unique_tasks.append(v)
+       
+        # print(unique_tasks)
 
         k = 0
-        for candidate_worker in self.workers:
-            if(k < len(self.tasks)):
-                for t in range(k, len(self.tasks)):
-                    deploying_task = self.tasks[t]
-                    if(candidate_worker.can_deploy_task(deploying_task)):
-                        candidate_worker.deploy_task(deploying_task)
-                        binpacked_deployment.record_deployment(candidate_worker.id, deploying_task.id)
+        for candidate_worker in sorted_workers:
+            if(k < len(unique_tasks)):
+                for t in range(k, len(unique_tasks)):
+                    colocatable_task = find_task(self.tasks, unique_tasks[t])
+
+                    deployed_worker_id = binpacked_deployment.get_key_for_value(colocatable_task.id)                    
+                    deployed_worker = find_worker(self.workers, deployed_worker_id)
+
+                    if(candidate_worker.can_deploy_task(colocatable_task)):
+                        # Colocate the task
+                        deployed_worker.remove_task(colocatable_task)
+                        candidate_worker.deploy_task(colocatable_task)
+                        binpacked_deployment.colocate_deployment(colocatable_task.id, deployed_worker_id, candidate_worker.id)
                         k = t+1
                     else:
                         k = t
@@ -62,7 +93,7 @@ class BinPack:
         # print(binpacked_deployment)
 
         # Constructing Task Graph (Node: Task, Edge: Affinity)
-        task_graph = TaskGraph()
+        bp_task_graph = TaskGraph()
 
         for i in range(0, len(self.tasks)):
             for j in range(i, len(self.tasks)):
@@ -75,13 +106,15 @@ class BinPack:
                     associated_affinity_cost =  AffinityCost(self.worker_graph, x_task, y_task, self.task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
 
                     if x_task and y_task and associated_affinity_cost:
-                        task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
+                        bp_task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
 
-        # print(task_graph)
+        # print(bp_task_graph)
 
 
         # Crewmen Monitoring Functions
-        net_cost = wm.net_cost(task_graph.network.get_weighted_edge_list())
+        net_cost = wm.net_cost(bp_task_graph.network.get_weighted_edge_list())
         # print("Net Cost: ", net_cost, "\n")
 
-        return binpacked_deployment, net_cost
+        total_colocations = binpacked_deployment.get_total_colocations(previous_deployment.deployment_map)
+
+        return binpacked_deployment, net_cost, total_colocations

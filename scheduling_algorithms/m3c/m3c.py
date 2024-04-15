@@ -66,7 +66,7 @@ class M3C:
 
           # Net Cost
           net_cost = wm.net_cost(task_graph.network.get_weighted_edge_list())
-          # print(net_cost)
+          # print("initial netcost:", net_cost)
 
           # Get Affinity Cost Threshold
           t = wm.affinity_cost_threshold(task_graph.network.get_weighted_edge_list())
@@ -115,7 +115,7 @@ class M3C:
                     colocatable_task_id = cts_graph.select_least_degree_node_for_edge(e)
                     colocatable_task = find_task(self.tasks, colocatable_task_id)                    
 
-                    # print(colocatable_task)
+                    # print(e, colocatable_task)
 
                     """
                     2.2.1 Try to place the task in one of the associated workers on the edge by evaluating the node/worker resources using the value function.
@@ -126,7 +126,7 @@ class M3C:
                     worker_id_of_other_task = m3c_deployment.get_key_for_value(cts_graph.get_other_node(e, colocatable_task_id))                 
                     deployed_worker_of_other_task = find_worker(self.workers, worker_id_of_other_task)
 
-                    # print("deployed_worker_id", deployed_worker_id, "worker_id_of_other_task", worker_id_of_other_task)
+                    # print("deployed_worker_id", deployed_worker.id, "worker_id_of_other_task", deployed_worker_of_other_task.id)
 
                     if(deployed_worker_of_other_task and deployed_worker_of_other_task.can_deploy_task(colocatable_task)):
                          """
@@ -183,11 +183,15 @@ class M3C:
                          if x_task and y_task and associated_affinity_cost:
                               m3c_task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
 
+          # print(m3c_task_graph)
+
           # Net Cost
           m3c_net_cost = wm.net_cost(m3c_task_graph.network.get_weighted_edge_list())
           # print(m3c_net_cost)
 
-          return m3c_deployment, m3c_net_cost
+          total_colocations = m3c_deployment.get_total_colocations(previous_deployment.deployment_map)
+
+          return m3c_deployment, m3c_net_cost, total_colocations
 
 
 
