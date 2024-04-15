@@ -24,4 +24,5 @@ class EPVM:
 
         for w in self.workers:
             t_ids = w.get_deployment_ids()
-            previous_deployment.record_deployment(w.id, t_ids)
+            for t in t_ids:
+                  previous_deployment.record_deployment(w.id, t)

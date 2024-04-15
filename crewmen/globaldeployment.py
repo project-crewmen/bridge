@@ -1,6 +1,6 @@
 import uuid
 
-# from crewmen.worker import Worker
+from crewmen.worker import Worker
 # from crewmen.task import Task
 
 from typing import Dict
@@ -17,6 +17,12 @@ class GlobalDeployment:
             if value in values:
                 return key
         return None
+    
+    def save_deployment(self, workers: list[Worker]):
+        for w in workers:
+            t_ids = w.get_deployment_ids()
+            for t in t_ids:
+                self.record_deployment(w.id, t)
 
     def record_deployment(self, k: str, v: str):
         if k in self.deployment_map:

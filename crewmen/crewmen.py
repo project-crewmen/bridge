@@ -31,6 +31,17 @@ class Crewmen:
         
         return hacs
     
+    def get_colocatable_tasks_set(self, hacs: list[(str, str, float)]) -> list[str]:
+        cts: list[str] = []
+
+        for u, v, w in hacs:
+            if u not in cts:
+                cts.append(u)
+            if v not in cts:
+                cts.append(v)
+        
+        return cts
+
     def get_minimum_worker_subgraph_netcosts_list(self, worker_subgraph_netcost_list: Dict[str, float]):
         minimum_worker_subgraph_netcosts_list: Dict[str, float] = {}
 

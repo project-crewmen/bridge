@@ -21,6 +21,8 @@ from utils.graph_visualization.graph_visializer import GraphVisulizer
 
 from scheduling_algorithms.bf.bf import BruteForce
 from scheduling_algorithms.bin_pack.bin_pack import BinPack
+from scheduling_algorithms.e_pvm.e_pvm import EPVM
+from scheduling_algorithms.kube_scheduler.kube_scheduler import KubeScheduler
 from scheduling_algorithms.m3c.m3c import M3C
 
 def sched_algo_log_helper(w_amt, t_amt, perms, deps, bf_net_cost):
@@ -143,7 +145,7 @@ if __name__ == "__main__":
 
 
 
-                    # Evaluate using Binpack Force Scheduling Algorithm
+                    # Evaluate using Binpack Scheduling Algorithm
                     print("\n--- Binpack Scheduling Algorithm ---")
                     start_time = time.time()  # Record the start time
 
@@ -164,6 +166,33 @@ if __name__ == "__main__":
                         w.clear_deployments()
 
                     load_deployments(data, workers, tasks)
+
+
+
+                    # Evaluate using KubeScheduler Scheduling Algorithm
+                    print("\n--- KubeScheduler Scheduling Algorithm ---")
+                    start_time = time.time()  # Record the start time
+
+                    bp = KubeScheduler(workers, tasks, worker_graph, task_affinity_graph)
+                    kube_sched_deployment, kube_sched_net_cost, kube_sched_total_colocations = bp.run()
+
+                    # sched_algo_log_helper(len(workers), len(tasks), kube_sched_deployment, kube_sched_net_cost)   
+                    print("Netcost: ", kube_sched_net_cost)    
+                    print("Total Colocations: ", kube_sched_total_colocations)      
+
+                    end_time = time.time()  # Record the end time
+                    kube_sched_elapsed_time = end_time - start_time  # Calculate the elapsed time
+                    print(f"Time taken: {kube_sched_elapsed_time} seconds\n")
+
+
+
+
+                    # Reset Deployment
+                    for w in workers:
+                        w.clear_deployments()
+
+                    load_deployments(data, workers, tasks)
+
 
 
 
@@ -195,6 +224,9 @@ if __name__ == "__main__":
                         "BP NetCost": bp_net_cost,
                         "BP Computation Time": bp_elapsed_time,
                         "BP Total Colocations": bp_total_colocations,
+                        "KubeScheduler NetCost": kube_sched_net_cost,
+                        "KubeScheduler Computation Time": kube_sched_elapsed_time,
+                        "KubeScheduler Total Colocations": kube_sched_total_colocations,
                         "M3C NetCost": m3c_net_cost,
                         "M3C Computation Time": m3c_elapsed_time,
                         "M3C Total Colocations": m3c_total_colocations,
