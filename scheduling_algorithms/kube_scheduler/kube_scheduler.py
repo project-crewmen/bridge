@@ -1,5 +1,3 @@
-import random
-
 from crewmen.worker import Worker
 from crewmen.task import Task
 from crewmen.worker_graph import WorkerGraph
@@ -11,14 +9,44 @@ from crewmen.affinity_cost import AffinityCost
 
 from utils.crewmen_utils import  find_task, find_worker
 
-def select_candidate_workers(workers: list[Worker], task: Task) -> list[Worker]:
-    return workers
+def calculate_priority(worker: Worker, task: Task):
+    # Calculate available resources on the node
+    available_cpu = worker.cpu.cores - worker.cpu.cores_used
+    available_memory = worker.memory.size - worker.memory.size_used
 
-def score_workers(candidate_workers: list[Worker]) -> list[Worker]:
+    # Calculate resource utilization ratio
+    cpu_util_ratio = task.cpu_required / available_cpu
+    memory_util_ratio = task.memory_required / available_memory
+
+    # Priority calculation: lower utilization ratio indicates higher priority
+    priority_score = 1 / (cpu_util_ratio + memory_util_ratio)
+
+    return priority_score
+
+def select_candidate_workers(workers: list[Worker], task: Task) -> list[Worker]:
+    candidate_workers: list[Worker] = []
+
+    for w in workers:
+        if(w.can_deploy_task(task)):
+            candidate_workers.append(w)
+
     return candidate_workers
 
-def pick_worker(candidate_workers: list[Worker]) -> Worker:
-    return random.choice(candidate_workers)
+def score_workers(candidate_workers: list[Worker], task: Task) -> list[Worker]:
+    # Score workers based on resource availability
+    scored_workers: list[(Worker, float)] = []
+    for w in candidate_workers:
+        scored_workers.append((w, calculate_priority(w, task)))
+
+    
+    return scored_workers
+
+def pick_worker(scored_workers: list[(Worker, float)]) -> Worker:
+    prioritized_workers = sorted(scored_workers, key=lambda x: x[1], reverse=True)
+
+    # print(prioritized_workers)
+
+    return prioritized_workers[0][0]
 
 
 class KubeScheduler:
@@ -43,20 +71,7 @@ class KubeScheduler:
 
         # Constructing Task Graph (Node: Task, Edge: Affinity)
         task_graph = TaskGraph()
-
-        for i in range(0, len(self.tasks)):
-            for j in range(i, len(self.tasks)):
-                if i != j:
-                        # Find Tasks
-                        x_task = find_task(self.tasks, f"t_{i}")
-                        y_task = find_task(self.tasks, f"t_{j}")
-
-                        # Find Affinity Cost
-                        associated_affinity_cost =  AffinityCost(self.worker_graph, x_task, y_task, self.task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
-
-                        if x_task and y_task and associated_affinity_cost:
-                            task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
-
+        task_graph.initialize(self.tasks, self.worker_graph, self.task_affinity_graph)
         # print(task_graph)
 
         # Net Cost
@@ -93,7 +108,7 @@ class KubeScheduler:
             """
             STEP 2 - Scoring and Prioritization
             """
-            scored_workers = score_workers(candidate_workers)
+            scored_workers = score_workers(candidate_workers, colocatable_task)
 
             """
             STEP 3 - Pick a node
@@ -107,20 +122,7 @@ class KubeScheduler:
 
         # Constructing Task Graph (Node: Task, Edge: Affinity)
         kube_sched_task_graph = TaskGraph()
-
-        for i in range(0, len(self.tasks)):
-            for j in range(i, len(self.tasks)):
-                if i != j:
-                        # Find Tasks
-                        x_task = find_task(self.tasks, f"t_{i}")
-                        y_task = find_task(self.tasks, f"t_{j}")
-
-                        # Find Affinity Cost
-                        associated_affinity_cost =  AffinityCost(self.worker_graph, x_task, y_task, self.task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
-
-                        if x_task and y_task and associated_affinity_cost:
-                            kube_sched_task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
-
+        kube_sched_task_graph.initialize(self.tasks, self.worker_graph, self.task_affinity_graph)
         # print(kube_sched_task_graph)
 
         # Net Cost

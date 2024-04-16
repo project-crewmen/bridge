@@ -22,25 +22,15 @@ class BinPack:
 
         # Save previous deployment
         previous_deployment = GlobalDeployment(f"previous_deployment")
-
-        for w in self.workers:
-               t_ids = w.get_deployment_ids()
-               for t in t_ids:
-                    previous_deployment.record_deployment(w.id, t)
-
+        previous_deployment.save_deployment(self.workers)
         # print(previous_deployment)
         
-        # Sort workers based on CPU usage
+        # Sort workers based on CPU availability
         sorted_workers = sorted(self.workers, key=lambda x: x.cpu.cores - x.cpu.cores_used, reverse=True)
 
         # Create a new deployment
         binpacked_deployment = GlobalDeployment(f"binpacked_deployment")
-
-        for w in self.workers:
-            t_ids = w.get_deployment_ids()
-            for t in t_ids:
-                binpacked_deployment.record_deployment(w.id, t)
-
+        binpacked_deployment.save_deployment(self.workers)
         # print("binpacked_deployment", binpacked_deployment)
 
         # gv1 = GraphVisulizer(self.task_affinity_graph.network.graph)
@@ -94,20 +84,7 @@ class BinPack:
 
         # Constructing Task Graph (Node: Task, Edge: Affinity)
         bp_task_graph = TaskGraph()
-
-        for i in range(0, len(self.tasks)):
-            for j in range(i, len(self.tasks)):
-                if i != j:
-                    # Find Tasks
-                    x_task = find_task(self.tasks, f"t_{i}")
-                    y_task = find_task(self.tasks, f"t_{j}")
-
-                    # Find Affinity Cost
-                    associated_affinity_cost =  AffinityCost(self.worker_graph, x_task, y_task, self.task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
-
-                    if x_task and y_task and associated_affinity_cost:
-                        bp_task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
-
+        bp_task_graph.initialize(self.tasks, self.worker_graph, self.task_affinity_graph)
         # print(bp_task_graph)
 
 

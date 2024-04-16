@@ -31,21 +31,23 @@ if __name__ == "__main__":
     tasks: list[Task] = []
     task_affinity_graph = TaskAffinityGraph()
     
-    with open((os.path.join("in", f"log_2024-04-02_12-38-18.json")), 'r') as file:
+    with open((os.path.join("in/logs_2024-04-16_11-53-27", f"5_log.json")), 'r') as file:
         data = json.load(file)
 
         # Load All
         load_all(data, workers, links, worker_graph, tasks, task_affinity_graph)
 
-        # Evaluate using Brute Force Scheduling Algorithm
-        print("\n--- Binpack Scheduling Algorithm ---")
+        # Evaluate using EPVM Scheduling Algorithm
+        print("\n--- EPVM Scheduling Algorithm ---")
         start_time = time.time()  # Record the start time
 
-        e_pvm = EPVM(workers, tasks, worker_graph, task_affinity_graph)
-        e_pvm.run()
+        epvm = EPVM(workers, tasks, worker_graph, task_affinity_graph)
+        epvm_deployment, epvm_net_cost, epvm_total_colocations = epvm.run()
 
-        # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost)     
+        sched_algo_log_helper(len(workers), len(tasks), epvm_deployment, epvm_net_cost)     
 
         end_time = time.time()  # Record the end time
         elapsed_time = end_time - start_time  # Calculate the elapsed time
         print(f"Time taken: {elapsed_time} seconds\n")
+
+        

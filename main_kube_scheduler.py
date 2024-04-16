@@ -31,13 +31,13 @@ if __name__ == "__main__":
     tasks: list[Task] = []
     task_affinity_graph = TaskAffinityGraph()
     
-    with open((os.path.join("in/logs_2024-04-13_02-17-03", f"5_log.json")), 'r') as file:
+    with open((os.path.join("in/logs_2024-04-16_11-53-27", f"5_log.json")), 'r') as file:
         data = json.load(file)
 
         # Load All
         load_all(data, workers, links, worker_graph, tasks, task_affinity_graph)
 
-        # Evaluate using Brute Force Scheduling Algorithm
+        # Evaluate using KubeScheduler Scheduling Algorithm
         print("\n--- KubeScheduler Scheduling Algorithm ---")
         start_time = time.time()  # Record the start time
 

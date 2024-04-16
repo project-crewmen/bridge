@@ -2,10 +2,7 @@ from crewmen.worker import Worker
 from crewmen.link import Link
 from crewmen.task import Task
 from crewmen.worker_graph import WorkerGraph
-from crewmen.task_graph import TaskGraph
 from crewmen.task_affinity_graph import TaskAffinityGraph
-from crewmen.globaldeployment import GlobalDeployment
-from crewmen.crewmen import Crewmen
 
 # ID Filters
 def get_worker_ids(workers: list[Worker]):

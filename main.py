@@ -161,6 +161,33 @@ if __name__ == "__main__":
                     print(f"Time taken: {bp_elapsed_time} seconds\n")
 
 
+                    
+
+
+                    # Reset Deployment
+                    for w in workers:
+                        w.clear_deployments()
+
+                    load_deployments(data, workers, tasks)
+
+
+
+                    # Evaluate using EPVM Scheduling Algorithm
+                    print("\n--- EPVM Scheduling Algorithm ---")
+                    start_time = time.time()  # Record the start time
+
+                    epvm = EPVM(workers, tasks, worker_graph, task_affinity_graph)
+                    epvm_deployment, epvm_net_cost, epvm_total_colocations = epvm.run()
+
+                    # sched_algo_log_helper(len(workers), len(tasks), epvm_deployment, epvm_net_cost)   
+                    print("Netcost: ", epvm_net_cost)    
+                    print("Total Colocations: ", epvm_total_colocations)      
+
+                    end_time = time.time()  # Record the end time
+                    epvm_elapsed_time = end_time - start_time  # Calculate the elapsed time
+                    print(f"Time taken: {epvm_elapsed_time} seconds\n")
+
+
                     # Reset Deployment
                     for w in workers:
                         w.clear_deployments()
@@ -173,8 +200,8 @@ if __name__ == "__main__":
                     print("\n--- KubeScheduler Scheduling Algorithm ---")
                     start_time = time.time()  # Record the start time
 
-                    bp = KubeScheduler(workers, tasks, worker_graph, task_affinity_graph)
-                    kube_sched_deployment, kube_sched_net_cost, kube_sched_total_colocations = bp.run()
+                    kube_sched = KubeScheduler(workers, tasks, worker_graph, task_affinity_graph)
+                    kube_sched_deployment, kube_sched_net_cost, kube_sched_total_colocations = kube_sched.run()
 
                     # sched_algo_log_helper(len(workers), len(tasks), kube_sched_deployment, kube_sched_net_cost)   
                     print("Netcost: ", kube_sched_net_cost)    
@@ -224,6 +251,9 @@ if __name__ == "__main__":
                         "BP NetCost": bp_net_cost,
                         "BP Computation Time": bp_elapsed_time,
                         "BP Total Colocations": bp_total_colocations,
+                        "EPVM NetCost": epvm_net_cost,
+                        "EPVM Computation Time": epvm_elapsed_time,
+                        "EPVM Total Colocations": epvm_total_colocations,
                         "KubeScheduler NetCost": kube_sched_net_cost,
                         "KubeScheduler Computation Time": kube_sched_elapsed_time,
                         "KubeScheduler Total Colocations": kube_sched_total_colocations,

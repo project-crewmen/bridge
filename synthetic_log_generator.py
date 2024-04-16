@@ -14,6 +14,25 @@ from crewmen.worker_graph import WorkerGraph
 from crewmen.task import Task
 from crewmen.globaldeployment import GlobalDeployment
 from crewmen.task_affinity_graph import TaskAffinityGraph
+from crewmen.communication import Communication
+from crewmen.crewmen import Crewmen
+
+# Worker Configurations
+WORKER_CONFIG_CPU_RANGE=(2,8)
+WORKER_CONFIG_MEMORY_RANGE=(1024, 1024*4)
+WORKER_CONFIG_DISK_RANGE=(4096, 4096*4)
+
+# Link Configurations
+LINK_CONFIG_RESPONSE_TIME_RANGE=(0, 1)
+
+# Task Configurations
+TASK_CONFIG_CPU_REQUIRED_RANGE=(1,1)
+TASK_CONFIG_MEMORY_REQUIRED_RANGE=(512, 1024)
+TASK_CONFIG_DISK_REQUIRED_RANGE=(1024, 4096)
+
+# Task Affinity Configurations
+TASK_AFFINITY_CONFIG_MESSAGE_PASSED_RANGE=(10, 1000)
+TASK_AFFINITY_CONFIG_DATA_EXCHANGED_RANGE=(1024, 1024*100)
 
 
 if __name__ == "__main__":
@@ -24,7 +43,9 @@ if __name__ == "__main__":
     if not os.path.exists(logs_folder):
         os.makedirs(logs_folder)
 
-    for x in range(3, 103):
+    wm = Crewmen()
+
+    for x in range(3, 53):
         file_name =  f"{x}_log"
 
         with open((os.path.join(f"in/{folder_name}", f"{file_name}.json")), "a") as results_file:
@@ -38,7 +59,7 @@ if __name__ == "__main__":
             # Generate Workers
             w_amt: int = x
             for w in range(0, w_amt):
-                worker: Worker = Worker(id=f"w_{w}", cpu=4, memory=random.randint(1024, 1024*4), disk=random.randint(4096, 4096*4))
+                worker: Worker = Worker(id=f"w_{w}", cpu=random.randint(*WORKER_CONFIG_CPU_RANGE), memory=random.randint(*WORKER_CONFIG_MEMORY_RANGE), disk=random.randint(*WORKER_CONFIG_DISK_RANGE))
                 workers.append(worker)
 
             # Generate Links
@@ -47,7 +68,7 @@ if __name__ == "__main__":
             l_amt = (w_amt * (w_amt-1))//2
             links.append(Link(id=f"l_{0}", response_time = 0.0000))
             for l in range(1, l_amt+1):
-                link: Link = Link(id=f"l_{l}", response_time=round(random.uniform(0, 1), 4))
+                link: Link = Link(id=f"l_{l}", response_time=round(random.uniform(*LINK_CONFIG_RESPONSE_TIME_RANGE), 4))
                 links.append(link)
 
             # Constructing Fully Connected Worker Graph (Node: Worker, Edge: Link)
@@ -63,27 +84,45 @@ if __name__ == "__main__":
             # Generate Tasks
             t_amt: int = x
             for t in range(0, t_amt):
-                task: Task = Task(id=f"t_{t}", cpu_required=1, memory_required=random.randint(512, 1024), disk_required=random.randint(1024, 4096))
+                task: Task = Task(id=f"t_{t}", cpu_required=random.randint(*TASK_CONFIG_CPU_REQUIRED_RANGE), memory_required=random.randint(*TASK_CONFIG_MEMORY_REQUIRED_RANGE), disk_required=random.randint(*TASK_CONFIG_DISK_REQUIRED_RANGE))
                 tasks.append(task)
 
-            # Generate Deployment
+            # Generate Deployment: Using Spread Strategy
+            randomized_tasks = random.sample(tasks, len(tasks))
+
             for w in range(0, w_amt):
                 deploying_worker = find_worker(workers, f"w_{w}")
-                task_to_be_deployed = find_task(tasks, f"t_{w}")
+                task_to_be_deployed = randomized_tasks[w]
                 deploying_worker.deploy_task(task_to_be_deployed)
 
                 deployments.record_deployment(deploying_worker.id, task_to_be_deployed.id)
 
-            # Construct Task Affinity Cost Graph
+            # print(deployments)
+
+            # Message passed and Data echanged generation for each task pair
+            communications: list[Communication] = []
+
             for i in range(0, t_amt):
                 for j in range(i, t_amt):
                     if i != j:
-                        # Find Tasks
-                        x_task = find_task(tasks, f"t_{i}")
-                        y_task = find_task(tasks, f"t_{j}")
+                        msg_passed = random.randint(*TASK_AFFINITY_CONFIG_DATA_EXCHANGED_RANGE)
+                        data_exchanged = random.randint(*TASK_AFFINITY_CONFIG_DATA_EXCHANGED_RANGE)
 
-                        if x_task and y_task:
-                            task_affinity_graph.add_affinity(x_task, y_task, round(random.uniform(0, 1), 4))
+                        communications.append(Communication(f"t_{i}", f"t_{j}", msg_passed, data_exchanged))
+
+            total_message_passed_amt = 0
+            total_data_exchanged_amt = 0
+
+            for com in communications:
+                total_message_passed_amt += com.message_passed
+                total_data_exchanged_amt += com.data_exchanged
+
+            for com in communications:
+                x_task = find_task(tasks, com.x_task)
+                y_task = find_task(tasks, com.y_task)
+
+                if x_task and y_task:
+                    task_affinity_graph.add_affinity(x_task, y_task, wm.affinity(total_message_passed_amt, total_data_exchanged_amt, com.message_passed, com.data_exchanged))
 
 
             # Spec parse
