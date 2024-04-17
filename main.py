@@ -21,6 +21,7 @@ from utils.graph_visualization.graph_visializer import GraphVisulizer
 
 from scheduling_algorithms.bf.bf import BruteForce
 from scheduling_algorithms.bin_pack.bin_pack import BinPack
+# from scheduling_algorithms.extended_bin_pack.extended_bin_pack import ExtendedBinPack
 from scheduling_algorithms.e_pvm.e_pvm import EPVM
 from scheduling_algorithms.kube_scheduler.kube_scheduler import KubeScheduler
 from scheduling_algorithms.m3c.m3c import M3C
@@ -161,6 +162,31 @@ if __name__ == "__main__":
                     print(f"Time taken: {bp_elapsed_time} seconds\n")
 
 
+                    # # Reset Deployment
+                    # for w in workers:
+                    #     w.clear_deployments()
+
+                    # load_deployments(data, workers, tasks)
+
+
+
+
+                    # # Evaluate using ExtendedBinPack Scheduling Algorithm
+                    # print("\n--- ExtendedBinPack Scheduling Algorithm ---")
+                    # start_time = time.time()  # Record the start time
+
+                    # ebp = ExtendedBinPack(workers, tasks, worker_graph, task_affinity_graph)
+                    # binpacked_deployment, ebp_net_cost, ebp_total_colocations = ebp.run()
+
+                    # # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, ebp_net_cost)   
+                    # print("Netcost: ", ebp_net_cost)    
+                    # print("Total Colocations: ", ebp_total_colocations)      
+
+                    # end_time = time.time()  # Record the end time
+                    # ebp_elapsed_time = end_time - start_time  # Calculate the elapsed time
+                    # print(f"Time taken: {ebp_elapsed_time} seconds\n")
+
+
                     
 
 
@@ -251,6 +277,9 @@ if __name__ == "__main__":
                         "BP NetCost": bp_net_cost,
                         "BP Computation Time": bp_elapsed_time,
                         "BP Total Colocations": bp_total_colocations,
+                        # "EBP NetCost": ebp_net_cost,
+                        # "EBP Computation Time": ebp_elapsed_time,
+                        # "EBP Total Colocations": ebp_total_colocations,
                         "EPVM NetCost": epvm_net_cost,
                         "EPVM Computation Time": epvm_elapsed_time,
                         "EPVM Total Colocations": epvm_total_colocations,

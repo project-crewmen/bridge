@@ -8,8 +8,8 @@ class MultiPlotter:
         self.lines = [] # List of all lines to be plot
         self.fig = None   # Store the figure handle
 
-    def plot(self, x, y, label):
-        self.lines.append((x, y, label))
+    def plot(self, x, y, label, color=None):
+        self.lines.append((x, y, label, color))
 
     def show(self):
         if self.fig is None:
@@ -17,8 +17,8 @@ class MultiPlotter:
         else:
             plt.figure(self.fig.number)  # Switch to the existing figure
 
-        for x, y, label in self.lines:
-            plt.plot(x, y, label=label)
+        for x, y, label, color in self.lines:
+            plt.plot(x, y, label=label, color=color)
 
         # Add title and labels
         plt.title(self.title)

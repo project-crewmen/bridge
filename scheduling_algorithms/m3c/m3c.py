@@ -132,15 +132,16 @@ class M3C:
 
                               if(deployed_worker_of_other_task and deployed_worker_of_other_task.can_deploy_task(colocatable_task)):
                                    # Colocate the task
-                                   deployed_worker.remove_task(colocatable_task)
-                                   deployed_worker_of_other_task.deploy_task(colocatable_task)
-                                   m3c_deployment.colocate_deployment(colocatable_task_id, deployed_worker_id, worker_id_of_other_task)
+                                   if(colocatable_task in deployed_worker.deployments):
+                                        deployed_worker.remove_task(colocatable_task)
+                                        deployed_worker_of_other_task.deploy_task(colocatable_task)
+                                        m3c_deployment.colocate_deployment(colocatable_task_id, deployed_worker_id, worker_id_of_other_task)
 
                                    # print("deployed oiiiii", m3c_deployment)
                                    break
                               else:
                                    # print("cant")
-                                   continue
+                                   break
 
 
           # print(m3c_deployment)

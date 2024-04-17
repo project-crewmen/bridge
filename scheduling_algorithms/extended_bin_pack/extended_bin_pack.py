@@ -10,7 +10,7 @@ from crewmen.affinity_cost import AffinityCost
 from utils.crewmen_utils import  find_task, find_worker
 
 
-class BinPack:
+class ExtendedBinPack:
     def __init__(self, workers: list[Worker], tasks: list[Task], worker_graph: WorkerGraph, task_affinity_graph: TaskAffinityGraph):
         self.workers = workers
         self.tasks = tasks
@@ -24,17 +24,33 @@ class BinPack:
         previous_deployment = GlobalDeployment(f"previous_deployment")
         previous_deployment.save_deployment(self.workers)
         # print(previous_deployment)
-       
         
         # Sort workers based on CPU availability
-        sorted_workers = sorted(self.workers, key=lambda x: x.cpu.cores - x.cpu.cores_used, reverse=True)
+        total_cpu_availability = 0
+        for w in self.workers:
+            total_cpu_availability += w.cpu.cores - w.cpu.cores_used
+
+        worker_cpu_aval = []
+        for w in self.workers:
+            worker_cpu_aval.append((w, (w.cpu.cores - w.cpu.cores_used)/total_cpu_availability))
+
+        # sorted_workers = sorted(self.workers, key=lambda x: x.cpu.cores, reverse=True)
+        sorted_worker_cpu_aval = sorted(worker_cpu_aval, key=lambda x: x[1], reverse=True)
+
+        sorted_workers = []
+        for item in sorted_worker_cpu_aval:
+            sorted_workers.append(item[0])
 
         # Create a new deployment
         binpacked_deployment = GlobalDeployment(f"binpacked_deployment")
         binpacked_deployment.save_deployment(self.workers)
         # print("binpacked_deployment", binpacked_deployment)
 
-        # gv1 = GraphVisulizer(self.task_affinity_graph.network.graph)
+        # Constructing Task Graph (Node: Task, Edge: Affinity)
+        # task_graph = TaskGraph()
+        # task_graph.initialize(self.tasks, self.worker_graph, self.task_affinity_graph)
+        
+        # gv1 = GraphVisulizer(task_graph.network.graph)
         # gv1.show()
 
         # Find the tasks with high affinites
@@ -42,12 +58,17 @@ class BinPack:
         net_cost = wm.net_cost(self.task_affinity_graph.network.get_weighted_edge_list())
         # print("initial netcost:", net_cost)
 
-        task_affinity_list = self.task_affinity_graph.network.get_weighted_edge_list()
-        sorted_task_affinity_list = sorted(task_affinity_list, key=lambda x: x[2], reverse=True)
+        # Get Affinity Cost Threshold
+        t = wm.affinity_cost_threshold(self.task_affinity_graph.network.get_weighted_edge_list())
+        # print(t)
+
+        # Calculate Hight Affinity Set
+        has = wm.high_affinity_costs_set(self.task_affinity_graph.network.get_weighted_edge_list(), t)
+        # print(has)
 
         unique_tasks = []
 
-        for u, v, w in sorted_task_affinity_list:
+        for u, v, w in has:
             if u not in unique_tasks:
                 unique_tasks.append(u)
             if v not in unique_tasks:
@@ -64,7 +85,7 @@ class BinPack:
                     deployed_worker_id = binpacked_deployment.get_key_for_value(colocatable_task.id)                    
                     deployed_worker = find_worker(self.workers, deployed_worker_id)
 
-                    if(candidate_worker.can_deploy_task(colocatable_task) and (colocatable_task not in candidate_worker.deployments)):
+                    if(candidate_worker.can_deploy_task(colocatable_task)):
                         # Colocate the task
                         deployed_worker.remove_task(colocatable_task)
                         candidate_worker.deploy_task(colocatable_task)

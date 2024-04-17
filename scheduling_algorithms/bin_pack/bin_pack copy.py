@@ -24,7 +24,7 @@ class BinPack:
         previous_deployment = GlobalDeployment(f"previous_deployment")
         previous_deployment.save_deployment(self.workers)
         # print(previous_deployment)
-       
+        
         
         # Sort workers based on CPU availability
         sorted_workers = sorted(self.workers, key=lambda x: x.cpu.cores - x.cpu.cores_used, reverse=True)
@@ -42,12 +42,17 @@ class BinPack:
         net_cost = wm.net_cost(self.task_affinity_graph.network.get_weighted_edge_list())
         # print("initial netcost:", net_cost)
 
-        task_affinity_list = self.task_affinity_graph.network.get_weighted_edge_list()
-        sorted_task_affinity_list = sorted(task_affinity_list, key=lambda x: x[2], reverse=True)
+        # Get Affinity Cost Threshold
+        t = wm.affinity_cost_threshold(self.task_affinity_graph.network.get_weighted_edge_list())
+        # print(t)
+
+        # Calculate Hight Affinity Set
+        has = wm.high_affinity_costs_set(self.task_affinity_graph.network.get_weighted_edge_list(), t)
+        # print(has)
 
         unique_tasks = []
 
-        for u, v, w in sorted_task_affinity_list:
+        for u, v, w in has:
             if u not in unique_tasks:
                 unique_tasks.append(u)
             if v not in unique_tasks:
@@ -64,7 +69,7 @@ class BinPack:
                     deployed_worker_id = binpacked_deployment.get_key_for_value(colocatable_task.id)                    
                     deployed_worker = find_worker(self.workers, deployed_worker_id)
 
-                    if(candidate_worker.can_deploy_task(colocatable_task) and (colocatable_task not in candidate_worker.deployments)):
+                    if(candidate_worker.can_deploy_task(colocatable_task)):
                         # Colocate the task
                         deployed_worker.remove_task(colocatable_task)
                         candidate_worker.deploy_task(colocatable_task)
