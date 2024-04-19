@@ -58,3 +58,9 @@ class Crewmen:
     
     def get_deployments_for_keys(self, keys: list[str]) -> list[GlobalDeployment]:
         return [self.deployments_map[key] for key in keys if key in self.deployments_map]
+    
+    def deployment_ratio(self, initial_netcost, current_netcost):
+        return current_netcost / initial_netcost
+    
+    def network_optimization(self, dep_ratio):
+        return 1 - dep_ratio

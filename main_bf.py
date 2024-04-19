@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from dotenv import load_dotenv
 
 from crewmen.worker import Worker
 from crewmen.link import Link
@@ -9,44 +10,32 @@ from crewmen.task import Task
 from crewmen.task_affinity_graph import TaskAffinityGraph
 
 from utils.crewmen_utils import load_all
+from utils.console_log_utils import print_sched_algo_results
 
 from scheduling_algorithms.bf.bf import BruteForce
 
-def sched_algo_log_helper(w_amt, t_amt, perms, deps, min_netcost):
-    print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
-    print(f"Total number of permutations:\t\t{perms}")
-    print(f"Deployement Set (Least Net Cost):\t{len(deps)}")
-    # dep_maps: list[str] = []
-    # # print(deps)
-    # for d in deps:
-    #     dep_maps.append(d.get_display_text())
-
-    # print(dep_maps)
-
-    print("Minimum Netcost: ", min_netcost, "\n")
-
-if __name__ == "__main__":
-    workers: list[Worker] = []
-    links: list[Link] = []
-    worker_graph = WorkerGraph()
-    tasks: list[Task] = []
-    task_affinity_graph = TaskAffinityGraph()
+if __name__ == "__main__":    
+    # Load environment variables from .env file
+    load_dotenv()
+    # Access environment variables
+    log_dir_name = os.getenv("SINGLE_TARGET_LOG")    
     
-    with open((os.path.join("in", f"log_2024-04-06_14-09-54.json")), 'r') as file:
+    with open((os.path.join("in", f"{log_dir_name}.json")), 'r') as file:
+        workers: list[Worker] = []
+        links: list[Link] = []
+        worker_graph = WorkerGraph()
+        tasks: list[Task] = []
+        task_affinity_graph = TaskAffinityGraph()
+
         data = json.load(file)
 
         # Load All
         load_all(data, workers, links, worker_graph, tasks, task_affinity_graph)
 
-        # Evaluate using Brute Force Scheduling Algorithm
-        print("\n--- Brute Force Scheduling Algorithm ---")
-        start_time = time.time()  # Record the start time
-
+        # Evaluate Brute Force Scheduling Algorithm
+        start_time = time.time()
         bf = BruteForce(workers, tasks, worker_graph, task_affinity_graph)
-        perms, deps, min_netcost = bf.run()
-
-        sched_algo_log_helper(len(workers), len(tasks), perms, deps, min_netcost)     
-
-        end_time = time.time()  # Record the end time
-        elapsed_time = end_time - start_time  # Calculate the elapsed time
-        print(f"Time taken: {elapsed_time} seconds\n")
+        perms, deps, min_netcost, total_colocations = bf.run()
+        end_time = time.time() 
+        elapsed_time = end_time - start_time
+        print_sched_algo_results("Brute Force Scheduling Algorithm", min_netcost, total_colocations, elapsed_time)

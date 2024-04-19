@@ -5,7 +5,6 @@ from crewmen.task_graph import TaskGraph
 from crewmen.task_affinity_graph import TaskAffinityGraph
 from crewmen.globaldeployment import GlobalDeployment
 from crewmen.crewmen import Crewmen
-from crewmen.affinity_cost import AffinityCost
 
 from utils.crewmen_utils import  find_task, find_worker
 
@@ -46,13 +45,11 @@ class BinPack:
         sorted_task_affinity_list = sorted(task_affinity_list, key=lambda x: x[2], reverse=True)
 
         unique_tasks = []
-
         for u, v, w in sorted_task_affinity_list:
             if u not in unique_tasks:
                 unique_tasks.append(u)
             if v not in unique_tasks:
-                unique_tasks.append(v)
-       
+                unique_tasks.append(v)       
         # print(unique_tasks)
 
         k = 0

@@ -5,7 +5,6 @@ from crewmen.task_graph import TaskGraph
 from crewmen.task_affinity_graph import TaskAffinityGraph
 from crewmen.globaldeployment import GlobalDeployment
 from crewmen.crewmen import Crewmen
-from crewmen.affinity_cost import AffinityCost
 
 from utils.crewmen_utils import get_worker_ids, find_worker, find_task, find_link
 
@@ -68,19 +67,7 @@ class BruteForce:
 
             # Constructing Task Graph (Node: Task, Edge: Affinity)
             task_graph = TaskGraph()
-
-            for i in range(0, len(self.tasks)):
-                for j in range(i, len(self.tasks)):
-                    if i != j:
-                        # Find Tasks
-                        x_task = find_task(self.tasks, f"t_{i}")
-                        y_task = find_task(self.tasks, f"t_{j}")
-
-                        # Find Affinity Cost
-                        associated_affinity_cost =  AffinityCost(self.worker_graph, x_task, y_task, self.task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
-
-                        if x_task and y_task and associated_affinity_cost:
-                            task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)
+            task_graph.initialize(self.tasks, self.worker_graph, self.task_affinity_graph)
 
 
             # Crewmen Monitoring Functions

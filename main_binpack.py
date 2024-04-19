@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from dotenv import load_dotenv
 
 from crewmen.worker import Worker
 from crewmen.link import Link
@@ -9,44 +10,32 @@ from crewmen.task import Task
 from crewmen.task_affinity_graph import TaskAffinityGraph
 
 from utils.crewmen_utils import load_all
+from utils.console_log_utils import print_sched_algo_results
 
 from scheduling_algorithms.bin_pack.bin_pack import BinPack
 
-def sched_algo_log_helper(w_amt, t_amt, deps, min_netcost, total_colocations):
-    print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
-    print(f"Deployement Set (Least Net Cost):\t{deps}")
-    # dep_maps: list[str] = []
-    # # print(deps)
-    # for d in deps:
-    #     dep_maps.append(d.get_display_text())
-
-    # print(dep_maps)
-
-    print("Minimum Netcost: ", min_netcost, "\n")
-    print("Total Colocations: ", total_colocations, "\n")
-
 if __name__ == "__main__":
-    workers: list[Worker] = []
-    links: list[Link] = []
-    worker_graph = WorkerGraph()
-    tasks: list[Task] = []
-    task_affinity_graph = TaskAffinityGraph()
+    # Load environment variables from .env file
+    load_dotenv()
+    # Access environment variables
+    log_dir_name = os.getenv("SINGLE_TARGET_LOG")  
     
-    with open((os.path.join("in", f"logs_2024-04-15_20-55-05/5_log.json")), 'r') as file:
+    with open((os.path.join("in", f"{log_dir_name}.json")), 'r') as file:
+        workers: list[Worker] = []
+        links: list[Link] = []
+        worker_graph = WorkerGraph()
+        tasks: list[Task] = []
+        task_affinity_graph = TaskAffinityGraph()
+
         data = json.load(file)
 
         # Load All
         load_all(data, workers, links, worker_graph, tasks, task_affinity_graph)
 
-        # Evaluate using Brute Force Scheduling Algorithm
-        print("\n--- Binpack Scheduling Algorithm ---")
-        start_time = time.time()  # Record the start time
-
+        # Evaluate Binpack Scheduling Algorithm
+        start_time = time.time()
         bp = BinPack(workers, tasks, worker_graph, task_affinity_graph)
         binpacked_deployment, net_cost, total_colocations = bp.run()
-
-        sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost, total_colocations)     
-
-        end_time = time.time()  # Record the end time
-        elapsed_time = end_time - start_time  # Calculate the elapsed time
-        print(f"Time taken: {elapsed_time} seconds\n")
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print_sched_algo_results("Binpack Scheduling Algorithm", net_cost, total_colocations, elapsed_time)

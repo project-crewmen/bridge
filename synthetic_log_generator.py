@@ -1,9 +1,6 @@
-import gc
-import time
 import os
 import json
 import random
-from dotenv import load_dotenv
 
 from utils.time import get_human_readable_timestamp
 from utils.crewmen_utils import find_worker, find_link, find_task
@@ -45,7 +42,7 @@ if __name__ == "__main__":
 
     wm = Crewmen()
 
-    for x in range(3, 53):
+    for x in range(3, 23):
         file_name =  f"{x}_log"
 
         with open((os.path.join(f"in/{folder_name}", f"{file_name}.json")), "a") as results_file:

@@ -18,27 +18,13 @@ from crewmen.affinity_cost import AffinityCost
 from utils.crewmen_utils import load_all, load_deployments
 from utils.crewmen_utils import  find_task
 from utils.graph_visualization.graph_visializer import GraphVisulizer
+from utils.console_log_utils import print_sched_algo_results
 
 from scheduling_algorithms.bf.bf import BruteForce
 from scheduling_algorithms.bin_pack.bin_pack import BinPack
-# from scheduling_algorithms.extended_bin_pack.extended_bin_pack import ExtendedBinPack
 from scheduling_algorithms.e_pvm.e_pvm import EPVM
 from scheduling_algorithms.kube_scheduler.kube_scheduler import KubeScheduler
 from scheduling_algorithms.m3c.m3c import M3C
-
-def sched_algo_log_helper(w_amt, t_amt, perms, deps, bf_net_cost):
-    print(f"--- Test #{1} - Workers: {w_amt} | Tasks: {t_amt} ---")
-    print(f"Total number of permutations:\t\t{perms}")
-    print(f"Deployement Set (Least Net Cost):\t{len(deps)}")
-    # dep_maps: list[str] = []
-    # # print(deps)
-    # for d in deps:
-    #     dep_maps.append(d.get_display_text())
-
-    # print(dep_maps)
-
-    print("Minimum Netcost: ", bf_net_cost, "\n")
-
 
 def alphanumeric_sort_key(filename):
     # Extract the numeric part of the filename using regular expression
@@ -49,14 +35,20 @@ def alphanumeric_sort_key(filename):
         numeric_part = float('inf')  # Set a very large number if no numeric part found
     return (numeric_part, filename)  # Sort first by numeric part, then by entire filename
 
+def reset_deployments(data, workers: list[Worker], tasks: list[Task]):
+    # Clear the exisitng deployment
+    for w in workers:
+        w.clear_deployments()
 
+    # Reload the deployments
+    load_deployments(data, workers, tasks)
+
+# Main Function
 if __name__ == "__main__":
     # Load environment variables from .env file
     load_dotenv()
-
     # Access environment variables
-    log_dir_name = os.getenv("TARGET_LOG")
-    
+    log_dir_name = os.getenv("TARGET_LOG")    
 
     with open((os.path.join("out/sim_results", f"{log_dir_name}.json")), "w") as results_file:
         results_file.write("[\n")
@@ -69,7 +61,7 @@ if __name__ == "__main__":
 
         sorted_filenames = sorted(sorted_filenames, key=alphanumeric_sort_key)
 
-        for filename in sorted_filenames:
+        for idx, filename in enumerate(sorted_filenames):
                 workers: list[Worker] = []
                 links: list[Link] = []
                 worker_graph = WorkerGraph()
@@ -81,7 +73,6 @@ if __name__ == "__main__":
 
                     # Load All
                     load_all(data, workers, links, worker_graph, tasks, task_affinity_graph)
-
                     print(f"\nWorkers: {len(workers)} | Tasks: {len(tasks)}")
 
                     # Base Setup
@@ -97,23 +88,9 @@ if __name__ == "__main__":
 
                     # Constructing Task Graph (Node: Task, Edge: Affinity)
                     task_graph = TaskGraph()
-
-                    for i in range(0, len(tasks)):
-                        for j in range(i, len(tasks)):
-                                if i != j:
-                                    # Find Tasks
-                                    x_task = find_task(tasks, f"t_{i}")
-                                    y_task = find_task(tasks, f"t_{j}")
-
-                                    # Find Affinity Cost
-                                    associated_affinity_cost =  AffinityCost(worker_graph, x_task, y_task, task_affinity_graph.network.get_edge_weight(x_task.id, y_task.id))
-
-                                    if x_task and y_task and associated_affinity_cost:
-                                        task_graph.add_affinity_cost(x_task, y_task, associated_affinity_cost)       
-
+                    task_graph.initialize(tasks, worker_graph, task_affinity_graph) 
 
                     # print(task_graph)
-
                     # gv1 = GraphVisulizer(task_graph.network.graph)
                     # gv1.show()
 
@@ -121,148 +98,83 @@ if __name__ == "__main__":
                     initial_net_cost = wm.net_cost(task_graph.network.get_weighted_edge_list())
                     # print(initial_net_cost)                         
 
-                    # # Evaluate using Brute Force Scheduling Algorithm
-                    # print("\n--- Brute Force Scheduling Algorithm ---")
-                    # start_time = time.time()  # Record the start time
 
+
+                    """
+                    WARNING !!!- UNABLE BRUTE FORCE ALGORITHM ONLY WHEN REQUIRED - TIME COMPLEXITY IS EXPONENTIAL
+                    """
+                    # """
+                    # Evaluate using Brute Force Scheduling Algorithm
+                    # """
+                    # # Reset Deployment
+                    # reset_deployments(data, workers, tasks)
+                    # # Execute Timer & Evaluate
+                    # start_time = time.time()
                     # bf = BruteForce(workers, tasks, worker_graph, task_affinity_graph)
                     # perms, deps, bf_net_cost, bf_total_colocations = bf.run()
-
-                    # # sched_algo_log_helper(len(workers), len(tasks), perms, deps, bf_net_cost)
-                    # print("Netcost: ", bf_net_cost)     
-                    # print("Total Colocations: ", bf_total_colocations)     
-
-                    # end_time = time.time()  # Record the end time
-                    # bf_elapsed_time = end_time - start_time  # Calculate the elapsed time
-                    # print(f"Time taken: {bf_elapsed_time} seconds\n")
+                    # end_time = time.time()
+                    # bf_elapsed_time = end_time - start_time
+                    # print_sched_algo_results("Brute Force Scheduling Algorithm", bf_net_cost, bf_total_colocations, bf_elapsed_time)
 
 
+
+                    """
+                    Evaluate Binpack Scheduling Algorithm
+                    """
                     # Reset Deployment
-                    for w in workers:
-                        w.clear_deployments()
-
-                    load_deployments(data, workers, tasks)
-
-
-
-
-                    # Evaluate using Binpack Scheduling Algorithm
-                    print("\n--- Binpack Scheduling Algorithm ---")
-                    start_time = time.time()  # Record the start time
-
+                    reset_deployments(data, workers, tasks)
+                    # Execute Timer & Evaluate
+                    start_time = time.time() 
                     bp = BinPack(workers, tasks, worker_graph, task_affinity_graph)
-                    binpacked_deployment, bp_net_cost, bp_total_colocations = bp.run()
-
-                    # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, bp_net_cost)   
-                    print("Netcost: ", bp_net_cost)    
-                    print("Total Colocations: ", bp_total_colocations)      
-
-                    end_time = time.time()  # Record the end time
-                    bp_elapsed_time = end_time - start_time  # Calculate the elapsed time
-                    print(f"Time taken: {bp_elapsed_time} seconds\n")
-
-
-                    # # Reset Deployment
-                    # for w in workers:
-                    #     w.clear_deployments()
-
-                    # load_deployments(data, workers, tasks)
+                    binpacked_deployment, bp_net_cost, bp_total_colocations = bp.run() 
+                    end_time = time.time()
+                    bp_elapsed_time = end_time - start_time
+                    print_sched_algo_results("Binpack Scheduling Algorithm", bp_net_cost, bp_total_colocations, bp_elapsed_time)
 
 
 
-
-                    # # Evaluate using ExtendedBinPack Scheduling Algorithm
-                    # print("\n--- ExtendedBinPack Scheduling Algorithm ---")
-                    # start_time = time.time()  # Record the start time
-
-                    # ebp = ExtendedBinPack(workers, tasks, worker_graph, task_affinity_graph)
-                    # binpacked_deployment, ebp_net_cost, ebp_total_colocations = ebp.run()
-
-                    # # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, ebp_net_cost)   
-                    # print("Netcost: ", ebp_net_cost)    
-                    # print("Total Colocations: ", ebp_total_colocations)      
-
-                    # end_time = time.time()  # Record the end time
-                    # ebp_elapsed_time = end_time - start_time  # Calculate the elapsed time
-                    # print(f"Time taken: {ebp_elapsed_time} seconds\n")
-
-
-                    
-
-
+                    """
+                    Evaluate EPVM Scheduling Algorithm
+                    """
                     # Reset Deployment
-                    for w in workers:
-                        w.clear_deployments()
-
-                    load_deployments(data, workers, tasks)
-
-
-
-                    # Evaluate using EPVM Scheduling Algorithm
-                    print("\n--- EPVM Scheduling Algorithm ---")
-                    start_time = time.time()  # Record the start time
-
+                    reset_deployments(data, workers, tasks)
+                    # Execute Timer & Evaluate
+                    start_time = time.time()
                     epvm = EPVM(workers, tasks, worker_graph, task_affinity_graph)
                     epvm_deployment, epvm_net_cost, epvm_total_colocations = epvm.run()
-
-                    # sched_algo_log_helper(len(workers), len(tasks), epvm_deployment, epvm_net_cost)   
-                    print("Netcost: ", epvm_net_cost)    
-                    print("Total Colocations: ", epvm_total_colocations)      
-
-                    end_time = time.time()  # Record the end time
-                    epvm_elapsed_time = end_time - start_time  # Calculate the elapsed time
-                    print(f"Time taken: {epvm_elapsed_time} seconds\n")
+                    end_time = time.time()
+                    epvm_elapsed_time = end_time - start_time 
+                    print_sched_algo_results("EPVM Scheduling Algorithm", epvm_net_cost, epvm_total_colocations, epvm_elapsed_time)
 
 
+
+                    """
+                    Evaluate KubeScheduler Scheduling Algorithm
+                    """
                     # Reset Deployment
-                    for w in workers:
-                        w.clear_deployments()
-
-                    load_deployments(data, workers, tasks)
-
-
-
-                    # Evaluate using KubeScheduler Scheduling Algorithm
-                    print("\n--- KubeScheduler Scheduling Algorithm ---")
-                    start_time = time.time()  # Record the start time
-
+                    reset_deployments(data, workers, tasks)
+                    # Execute Timer & Evaluate
+                    start_time = time.time()
                     kube_sched = KubeScheduler(workers, tasks, worker_graph, task_affinity_graph)
                     kube_sched_deployment, kube_sched_net_cost, kube_sched_total_colocations = kube_sched.run()
-
-                    # sched_algo_log_helper(len(workers), len(tasks), kube_sched_deployment, kube_sched_net_cost)   
-                    print("Netcost: ", kube_sched_net_cost)    
-                    print("Total Colocations: ", kube_sched_total_colocations)      
-
-                    end_time = time.time()  # Record the end time
-                    kube_sched_elapsed_time = end_time - start_time  # Calculate the elapsed time
-                    print(f"Time taken: {kube_sched_elapsed_time} seconds\n")
+                    end_time = time.time()
+                    kube_sched_elapsed_time = end_time - start_time
+                    print_sched_algo_results("KubeScheduler Scheduling Algorithm", kube_sched_net_cost, kube_sched_total_colocations, kube_sched_elapsed_time)
 
 
 
-
+                    """
+                    Evaluate M3C Scheduling Algorithm
+                    """
                     # Reset Deployment
-                    for w in workers:
-                        w.clear_deployments()
-
-                    load_deployments(data, workers, tasks)
-
-
-
-
-                    # Evaluate using M3C Scheduling Algorithm
-                    print("\n--- M3C Scheduling Algorithm ---")
-                    start_time = time.time()  # Record the start time
-
+                    reset_deployments(data, workers, tasks)
+                    # Execute Timer & Evaluate
+                    start_time = time.time()
                     m3c = M3C(workers, tasks, worker_graph, task_affinity_graph)
                     m3c_deployment, m3c_net_cost, m3c_total_colocations = m3c.run()
-
-                    # sched_algo_log_helper(len(workers), len(tasks), binpacked_deployment, net_cost)   
-                    print("Netcost: ", m3c_net_cost)        
-                    print("Total Colocations: ", m3c_total_colocations)       
-
-                    end_time = time.time()  # Record the end time
-                    m3c_elapsed_time = end_time - start_time  # Calculate the elapsed time
-                    print(f"Time taken: {m3c_elapsed_time} seconds\n")
+                    end_time = time.time() 
+                    m3c_elapsed_time = end_time - start_time 
+                    print_sched_algo_results("M3C Scheduling Algorithm", m3c_net_cost, m3c_total_colocations, m3c_elapsed_time)
 
                     # Output to a JSON file
                     # Create a dictionary with the test results
@@ -277,9 +189,6 @@ if __name__ == "__main__":
                         "BP NetCost": bp_net_cost,
                         "BP Computation Time": bp_elapsed_time,
                         "BP Total Colocations": bp_total_colocations,
-                        # "EBP NetCost": ebp_net_cost,
-                        # "EBP Computation Time": ebp_elapsed_time,
-                        # "EBP Total Colocations": ebp_total_colocations,
                         "EPVM NetCost": epvm_net_cost,
                         "EPVM Computation Time": epvm_elapsed_time,
                         "EPVM Total Colocations": epvm_total_colocations,
@@ -295,7 +204,13 @@ if __name__ == "__main__":
                     json_string = json.dumps(test_result)
 
                     # Write the JSON string to the file
-                    results_file.write(json_string + ",\n")
+                    results_file.write(json_string)
+                    # Add comma and newline if it's not the last file
+                    if idx < len(sorted_filenames) - 1:
+                        results_file.write(",\n")
+                    else:
+                        results_file.write("\n")
+
                     results_file.flush()
 
                     t += 1 

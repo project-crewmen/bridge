@@ -7,7 +7,6 @@ from crewmen.task_graph import TaskGraph
 from crewmen.task_affinity_graph import TaskAffinityGraph
 from crewmen.globaldeployment import GlobalDeployment
 from crewmen.crewmen import Crewmen
-from crewmen.affinity_cost import AffinityCost
 
 from utils.crewmen_utils import  find_task, find_worker
 
