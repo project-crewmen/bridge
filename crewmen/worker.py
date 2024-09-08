@@ -127,7 +127,7 @@ class Worker:
             # Deploy the task
             self.deployments.remove(task)
         else:
-            print("task removing failed!")
+            # print("task removing failed!")
             return None
         
     def clear_deployments(self):
